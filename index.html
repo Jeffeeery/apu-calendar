@@ -229,7 +229,7 @@ body.open #panel{transform:none}
       <span><i class="sw buf"></i>Buffer</span>
     </div>
     <span class="spacer"></span>
-    <div class="io"><button id="exp">Export notes</button><button id="imp">Import</button></div>
+    <div class="io"><button id="exp">Export notes</button><button id="ics">Export .ics</button><button id="imp">Import</button></div>
     <span class="pageno" id="pageno"></span>
   </footer>
 </main>
@@ -582,6 +582,35 @@ $id("exp").onclick=function(){
   document.body.appendChild(a);a.click();a.remove();
 };
 $id("imp").onclick=function(){$id("file").click()};
+
+/* ---- ics export: all-day events, one 7-day reminder each ---- */
+function icsStamp(n){return iso(n).replace(/-/g,"")}
+function icsEsc(t){return String(t).replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n")}
+function icsFold(l){var o="",i;for(i=0;i<l.length;i+=73)o+=(i?"\r\n ":"")+l.slice(i,i+73);return o}
+function icsText(){
+  var now=new Date().toISOString().slice(0,19).replace(/[-:]/g,"")+"Z", L=[
+    "BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//APU Calendar//2026-27//EN","CALSCALE:GREGORIAN","METHOD:PUBLISH",
+    "X-WR-CALNAME:APU Academic Calendar 2026/27","X-WR-TIMEZONE:Asia/Kuala_Lumpur"];
+  EV.forEach(function(ev){
+    L.push("BEGIN:VEVENT",
+      "UID:apu-2026-"+icsStamp(ev.s)+"-"+ev.type+"@jeffeeery.github.io",
+      "DTSTAMP:"+now,
+      "DTSTART;VALUE=DATE:"+icsStamp(ev.s),
+      "DTEND;VALUE=DATE:"+icsStamp(ev.e+1),
+      "SUMMARY:"+icsEsc(ev.name),
+      "TRANSP:TRANSPARENT",
+      "BEGIN:VALARM","TRIGGER:-P7D","ACTION:DISPLAY","DESCRIPTION:"+icsEsc(ev.name),"END:VALARM",
+      "END:VEVENT");
+  });
+  L.push("END:VCALENDAR");
+  return L.map(icsFold).join("\r\n")+"\r\n";
+}
+$id("ics").onclick=function(){
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([icsText()],{type:"text/calendar;charset=utf-8"}));
+  a.download="apu-calendar-2026-27.ics";
+  document.body.appendChild(a);a.click();a.remove();
+};
 $id("file").onchange=function(){
   var f=this.files[0];this.value="";if(!f)return;
   var fr=new FileReader();

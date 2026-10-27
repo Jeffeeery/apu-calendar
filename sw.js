@@ -1,5 +1,5 @@
 // Offline cache. Bump VERSION whenever index.html changes so phones pick up the update.
-const VERSION = "apu-cal-v1";
+const VERSION = "apu-cal-v2";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-32.png"];
 
 self.addEventListener("install", e => {
