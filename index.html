@@ -365,6 +365,11 @@ body.open #panel{transform:none}
       <div class="acct">Signed in as <b id="semailtxt"></b></div>
       <div class="hint" id="sstat"></div>
       <div class="row"><button type="button" class="mini" id="snow">Sync now</button><button type="button" class="mini del" id="sout">Sign out</button></div>
+      <form id="spwform" hidden autocomplete="off">
+        <p class="hint">Set a password for this account so you can also sign in with email, e.g. on an iPhone home-screen app or for AI tools (MCP). Your Google sign-in keeps working.</p>
+        <label class="fld">New password<input type="password" id="spw" autocomplete="new-password" minlength="6" required></label>
+        <div class="facts"><button type="submit" class="pri">Set password</button></div>
+      </form>
       <p class="hint">Signing out keeps a copy on this device. Signing in again merges it back.</p>
     </div>
     <div class="msg" id="smsg"></div>
@@ -1134,7 +1139,7 @@ if("serviceWorker" in navigator&&location.protocol!=="file:")window.addEventList
 /* Cloud sync: Firebase Auth + Firestore, one document per user at users/{uid}.
    The calendar keeps working from localStorage; this only merges copies between devices. */
 import {initializeApp} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
-import {getAuth,onAuthStateChanged,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,signOut} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+import {getAuth,onAuthStateChanged,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,signOut,EmailAuthProvider,linkWithCredential} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
 import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,onSnapshot,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
 
 const app=initializeApp({
@@ -1186,6 +1191,7 @@ onAuthStateChanged(auth,user=>{
   $("sync-out").hidden=!!user;$("sync-in").hidden=!user;
   if(user){
     $("semailtxt").textContent=user.email||user.displayName||"your account";
+    $("spwform").hidden=!user.email||user.providerData.some(p=>p.providerId==="password");
     ref=doc(db,"users",user.uid);
     unsub=onSnapshot(ref,{includeMetadataChanges:true},snap=>{
       const fromServer=!snap.metadata.fromCache;
@@ -1234,6 +1240,12 @@ $("screate").onclick=async()=>{const f=$("sform");if(!f.reportValidity())return;
 $("sreset").onclick=async()=>{const em=$("semail").value.trim();if(!em){msg("Type your email first, then press Forgot password.","err");return}try{await sendPasswordResetEmail(auth,em);msg("Password reset email sent to "+em+".","ok")}catch(er){msg(errText(er),"err")}};
 $("sout").onclick=async()=>{await signOut(auth);msg("Signed out. Your data stays on this device.")};
 $("snow").onclick=()=>{msg("");push();status()};
+$("spwform").addEventListener("submit",async e=>{
+  e.preventDefault();const u=auth.currentUser;if(!u||!u.email)return;
+  msg("Setting password…");
+  try{await linkWithCredential(u,EmailAuthProvider.credential(u.email,$("spw").value));$("spw").value="";$("spwform").hidden=true;msg("Password set. You can now also sign in with "+u.email+" and this password.","ok")}
+  catch(er){msg(er&&er.code==="auth/requires-recent-login"?"For safety, sign out and sign in with Google again, then set the password.":errText(er),"err")}
+});
 status();
 window.APUSYNC={auth,db};
 </script>
