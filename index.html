@@ -182,6 +182,25 @@ body.open #panel{transform:none}
 .srow input,.srow select{font-size:12px;padding:6px}
 .swb{width:22px;height:22px;border:0;padding:0;background:var(--c);cursor:pointer}
 #sadd{align-self:flex-start;margin-top:14px}
+#psync[hidden]{display:none}
+#psync{display:flex;flex-direction:column;gap:22px}
+#psync .acct{font-size:13px;line-height:1.5}
+#psync .acct b{font-weight:600}
+#psync .row{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+#psync .gbtn{width:100%;border:1px solid var(--ink);background:var(--ink);color:var(--paper-2);padding:11px 14px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+#psync .gbtn:hover{background:#000}
+#psync .or{display:flex;align-items:center;gap:10px;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+#psync .or:before,#psync .or:after{content:"";flex:1;height:1px;background:var(--rule)}
+#psync form{display:flex;flex-direction:column;gap:11px}
+#psync .msg{font-size:12px;line-height:1.5;color:var(--muted);min-height:1em;white-space:pre-line}
+#psync .msg.err{color:var(--exam)}
+#psync .msg.ok{color:var(--hol)}
+#psync .ios{font-size:11px;line-height:1.5;color:var(--muted);border-left:3px solid var(--rule-strong);padding-left:10px}
+.nav #syncbtn{display:inline-flex;align-items:center;gap:6px}
+.nav #syncbtn i{width:6px;height:6px;border-radius:50%;background:var(--faint);display:inline-block}
+.nav #syncbtn.on i{background:var(--hol)}
+.nav #syncbtn.busy i{background:var(--buf)}
+.nav #syncbtn.off i{background:var(--exam)}
 #note{width:100%;min-height:130px;resize:vertical;background:transparent;border:1px solid var(--rule-strong);padding:10px 11px;font:13px/1.55 var(--sans);color:var(--ink);outline-offset:2px}
 #note:focus{border-color:var(--ink)}
 #pupd{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:8px}
@@ -223,7 +242,7 @@ body.open #panel{transform:none}
   @page{size:A4 landscape;margin:9mm}
   html,body{background:#fff}
   .sheet{max-width:none;min-height:188mm;padding:0;display:flex;flex-direction:column}
-  .sheet:before,.nav,.foot .io,#panel,#ov,.mnotes,.skey .lnk{display:none}
+  .sheet:before,.nav,.foot .io,#panel,#ov,.mnotes,.skey .lnk,#syncbtn{display:none}
   .masthead{padding-bottom:8px}
   .monogram{width:26px;height:26px;font-size:9px}
   .kicker{font-size:8px}
@@ -287,6 +306,8 @@ body.open #panel{transform:none}
       <button id="vl">List</button>
       <span class="sep"></span>
       <button id="prt">Print</button>
+      <span class="sep"></span>
+      <button id="syncbtn" title="Sync between devices"><i></i><span id="synctxt">Sync</span></button>
     </nav>
   </header>
   <div id="main"></div>
@@ -323,6 +344,26 @@ body.open #panel{transform:none}
     </form>
   </div>
   <div class="psec"><h4>Note</h4><textarea id="note" placeholder="Write something for this day"></textarea><div id="pupd"></div></div>
+  </div>
+  <div id="psync" hidden>
+    <div id="sync-out">
+      <p class="hint">Sign in on every device with the same account. Notes, subjects and schedule then stay the same everywhere. Everything still works offline and catches up when you are back online.</p>
+      <div style="margin-top:18px"><button type="button" class="gbtn" id="sg">Continue with Google</button></div>
+      <p class="ios" id="sios" hidden style="margin-top:12px">On an iPhone home-screen app, Google sign-in sometimes cannot open. If it does not work, use email below.</p>
+      <div class="or" style="margin:18px 0">or with email</div>
+      <form id="sform" autocomplete="on">
+        <label class="fld">Email<input type="email" id="semail" autocomplete="username" required></label>
+        <label class="fld">Password<input type="password" id="spass" autocomplete="current-password" minlength="6" required></label>
+        <div class="facts"><button type="submit" class="pri" id="slogin">Sign in</button><button type="button" class="mini" id="screate">Create account</button><button type="button" class="mini" id="sreset">Forgot password</button></div>
+      </form>
+    </div>
+    <div id="sync-in" hidden>
+      <div class="acct">Signed in as <b id="semailtxt"></b></div>
+      <div class="hint" id="sstat"></div>
+      <div class="row"><button type="button" class="mini" id="snow">Sync now</button><button type="button" class="mini del" id="sout">Sign out</button></div>
+      <p class="hint">Signing out keeps a copy on this device. Signing in again merges it back.</p>
+    </div>
+    <div class="msg" id="smsg"></div>
   </div>
   <div id="psubs" hidden>
     <p class="hint">Codes appear in the calendar cells. Changes save automatically. Click a colour square to change it.</p>
@@ -443,8 +484,69 @@ try{
   Object.keys(store.notes).forEach(function(k){var v=store.notes[k];if(v&&typeof v.text==="string")v.text=v.text.replace(/\r\n?/g,"\n")});
 }catch(e){}
 if(!store.subjects)store.subjects=JSON.parse(JSON.stringify(DEF_SUB));
+
+/* ---- data hygiene + merge (shared by import and sync) ----
+   Every record carries a timestamp (notes: updated, others: u). Deletes leave a
+   tombstone (del:true) so a delete on one device wins over an older copy elsewhere. */
+function isStr(x){return typeof x==="string"}
+function sanitize(j){
+  var out={notes:{},subjects:[],items:[],classes:[]};
+  if(!j||typeof j!=="object")return out;
+  var n=j.notes&&typeof j.notes==="object"?j.notes:{};
+  Object.keys(n).forEach(function(k){
+    var v=n[k];
+    if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&v&&isStr(v.text)&&(v.text||v.del))
+      out.notes[k]=v.del?{text:"",updated:+v.updated||0,del:true}:{text:v.text.replace(/\r\n?/g,"\n"),updated:+v.updated||0};
+  });
+  function clean(o,keys){var r={};keys.forEach(function(k){if(o[k]!==undefined&&o[k]!==null)r[k]=o[k]});r.u=+o.u||0;if(o.del)r.del=true;return r}
+  (Array.isArray(j.items)?j.items:[]).forEach(function(o){
+    if(o&&isStr(o.id)&&isStr(o.sub)&&/^\d{4}-\d{2}-\d{2}$/.test(o.date))out.items.push(clean(o,["id","sub","title","date","st","en","place"]));
+  });
+  (Array.isArray(j.classes)?j.classes:[]).forEach(function(o){
+    if(o&&isStr(o.id)&&isStr(o.sub)&&o.dow>=0&&o.dow<=6&&(o.sem===1||o.sem===2)&&o.w1>0&&o.w2>0){
+      var c=clean(o,["id","sub","title","dow","sem","w1","w2","st","en","place"]);
+      c.skip=(Array.isArray(o.skip)?o.skip:[]).filter(function(d){return /^\d{4}-\d{2}-\d{2}$/.test(d)});
+      out.classes.push(c);
+    }
+  });
+  (Array.isArray(j.subjects)?j.subjects:[]).forEach(function(o){
+    if(o&&isStr(o.id)&&isStr(o.code))out.subjects.push(clean(o,["id","code","name","sem","c"]));
+  });
+  return out;
+}
+function stamp(o){return +(o&&(o.u!=null?o.u:o.updated))||0}
+function pick(a,b){
+  if(!a)return b;if(!b)return a;
+  var x=stamp(a),y=stamp(b);
+  if(x!==y)return x>y?a:b;
+  return JSON.stringify(a)>=JSON.stringify(b)?a:b;   // deterministic tie-break, same on every device
+}
+function mergeList(a,b){
+  var out=a.map(function(o){return o}),idx={};
+  out.forEach(function(o,i){idx[o.id]=i});
+  b.forEach(function(o){if(o.id in idx)out[idx[o.id]]=pick(out[idx[o.id]],o);else{idx[o.id]=out.length;out.push(o)}});
+  return out;
+}
+function mergeStores(a,b){
+  var notes={};
+  Object.keys(a.notes).forEach(function(k){notes[k]=a.notes[k]});
+  Object.keys(b.notes).forEach(function(k){notes[k]=pick(notes[k],b.notes[k])});
+  return {notes:notes,subjects:mergeList(a.subjects,b.subjects),items:mergeList(a.items,b.items),classes:mergeList(a.classes,b.classes)};
+}
+/* order-independent fingerprint, so devices do not keep rewriting the same data */
+function canon(st){
+  function sortKeys(v){
+    if(Array.isArray(v))return v.map(sortKeys);
+    if(v&&typeof v==="object"){var r={};Object.keys(v).sort().forEach(function(k){r[k]=sortKeys(v[k])});return r}
+    return v;
+  }
+  function byId(l){return l.slice().sort(function(x,y){return x.id<y.id?-1:x.id>y.id?1:0})}
+  return JSON.stringify(sortKeys({notes:st.notes,subjects:byId(st.subjects),items:byId(st.items),classes:byId(st.classes)}));
+}
+function live(l){return l.filter(function(o){return !o.del})}
+store=sanitize(store);   /* one canonical shape everywhere */
 var timer;
-function flush(){clearTimeout(timer);try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}}
+function flush(){clearTimeout(timer);try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}if(window.APUCAL&&window.APUCAL.onSave)window.APUCAL.onSave()}
 
 /* ---- helpers ---- */
 function weekSpan(w){return w?span(w.s,w.e):""}
@@ -516,7 +618,7 @@ function monthTerms(){
 /* ---- my schedule ---- */
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function find(list,id){for(var i=0;i<list.length;i++)if(list[i].id===id)return list[i];return null}
-function subOf(id){return find(store.subjects,id)}
+function subOf(id){var s=find(store.subjects,id);return s&&!s.del?s:null}
 function subCode(id){var s=subOf(id);return s&&s.code?s.code:"—"}
 function subCol(id){var s=subOf(id);return s?PAL[(+s.c||0)%PAL.length]:"#9B9485"}
 function teachWeeks(sn){return WK.filter(function(w){return w&&w.type==="tch"&&w.sem&&w.sem.n===sn})}
@@ -530,8 +632,8 @@ function classOn(c,n){
 }
 function dayEntries(n,withSkipped){
   var id=iso(n),out=[];
-  store.items.forEach(function(it){if(it.date===id)out.push({k:"one",o:it})});
-  store.classes.forEach(function(c){var r=classOn(c,n);if(r===1||(r===2&&withSkipped))out.push({k:"wk",o:c,skipped:r===2})});
+  store.items.forEach(function(it){if(it.date===id&&!it.del)out.push({k:"one",o:it})});
+  store.classes.forEach(function(c){if(c.del)return;var r=classOn(c,n);if(r===1||(r===2&&withSkipped))out.push({k:"wk",o:c,skipped:r===2})});
   out.sort(function(a,b){return (a.o.st||"").localeCompare(b.o.st||"")||(a.k===b.k?0:a.k==="one"?-1:1)});
   return out;
 }
@@ -547,7 +649,7 @@ function chipsHTML(n){
 }
 function subjectKey(sems){
   var any=Object.keys(sems).length;
-  var ks=store.subjects.filter(function(s){return !any||sems[+s.sem]||!+s.sem});
+  var ks=live(store.subjects).filter(function(s){return !any||sems[+s.sem]||!+s.sem});
   return '<section class="skey" aria-label="Subjects"><span class="kicker">Subjects</span>'+
     ks.map(function(s){return '<span class="k" style="--c:'+PAL[(+s.c||0)%PAL.length]+'"><i></i><b>'+esc(s.code)+'</b><span>'+esc(s.name)+'</span></span>'}).join("")+
     '<button type="button" class="lnk" id="msub">Manage subjects</button></section>';
@@ -685,7 +787,7 @@ function openDay(id){
   var r=store.notes[id];
   $id("note").value=r?r.text:"";
   upd();
-  $id("pday").hidden=false;$id("psubs").hidden=true;
+  $id("pday").hidden=false;$id("psubs").hidden=true;$id("psync").hidden=true;
   closeForm();renderMy();
   document.body.classList.add("open");
   setTimeout(function(){$id("note").focus()},60);
@@ -696,8 +798,9 @@ function upd(){
 }
 function closeP(){
   document.body.classList.remove("open");
-  var c=cur,subs=!$id("psubs").hidden;cur=null;closeForm();
-  if(subs){var m=$id("msub");if(m)m.focus()}
+  var c=cur,subs=!$id("psubs").hidden,sy=!$id("psync").hidden;cur=null;closeForm();
+  if(sy)$id("syncbtn").focus();
+  else if(subs){var m=$id("msub");if(m)m.focus()}
   else if(c){var b=document.querySelector('.day[data-d="'+c+'"]');if(b)b.focus()}
 }
 var composing=false;
@@ -707,7 +810,7 @@ $id("note").addEventListener("input",function(){
   if(composing)return;
   var t=this.value.replace(/\r\n?/g,"\n");
   if(t)store.notes[cur]={text:t,updated:Date.now()};
-  else delete store.notes[cur];
+  else if(store.notes[cur])store.notes[cur]={text:"",updated:Date.now(),del:true};
   upd();
   var b=document.querySelector('.day[data-d="'+cur+'"]');
   if(b){b.classList.toggle("hasnote",!!t);if(t)b.setAttribute("title",t);else b.removeAttribute("title")}
@@ -741,7 +844,7 @@ function fillSubs(sel,sem){
   var groups=[[1,"Semester 1"],[2,"Semester 2"],[0,"Other"]],h="";
   groups.sort(function(a,b){return (b[0]===sem)-(a[0]===sem)});
   groups.forEach(function(g){
-    var ss=store.subjects.filter(function(s){return (+s.sem||0)===g[0]});
+    var ss=live(store.subjects).filter(function(s){return (+s.sem||0)===g[0]});
     if(ss.length)h+='<optgroup label="'+g[1]+'">'+ss.map(function(s){return '<option value="'+esc(s.id)+'">'+esc(s.code+" · "+s.name)+'</option>'}).join("")+'</optgroup>';
   });
   $id("fsub").innerHTML=h;
@@ -799,6 +902,7 @@ $id("pform").addEventListener("submit",function(e){
     o.dow=fctx.dow;o.sem=fctx.sem;
   } else if(!editing)o.date=cur;
   var list=k==="wk"?store.classes:store.items;
+  o.u=Date.now();
   if(editing){var ex=find(list,editing.id);if(ex)Object.assign(ex,o)}
   else{o.id=uid();if(k==="wk")o.skip=[];list.push(o)}
   save();closeForm();renderMy();render();
@@ -807,17 +911,17 @@ $id("pmy").addEventListener("click",function(e){
   var b=e.target.closest("button[data-a]");if(!b)return;
   var a=b.getAttribute("data-a"),id=b.getAttribute("data-id"),c;
   if(a==="edit"){var k=b.getAttribute("data-k");openForm(k,find(k==="wk"?store.classes:store.items,id));return}
-  if(a==="del"){if(!confirm("Delete this item?"))return;store.items=store.items.filter(function(x){return x.id!==id})}
-  if(a==="delwk"){if(!confirm("Delete this weekly class from every week?"))return;store.classes=store.classes.filter(function(x){return x.id!==id})}
-  if(a==="skip"){c=find(store.classes,id);if(c){c.skip=c.skip||[];c.skip.push(cur)}}
-  if(a==="unskip"){c=find(store.classes,id);if(c)c.skip=(c.skip||[]).filter(function(d){return d!==cur})}
+  if(a==="del"){if(!confirm("Delete this item?"))return;c=find(store.items,id);if(c){c.del=true;c.u=Date.now()}}
+  if(a==="delwk"){if(!confirm("Delete this weekly class from every week?"))return;c=find(store.classes,id);if(c){c.del=true;c.u=Date.now()}}
+  if(a==="skip"){c=find(store.classes,id);if(c){c.skip=c.skip||[];c.skip.push(cur);c.u=Date.now()}}
+  if(a==="unskip"){c=find(store.classes,id);if(c){c.skip=(c.skip||[]).filter(function(d){return d!==cur});c.u=Date.now()}}
   save();renderMy();render();
 });
 
 /* ---- subjects editor ---- */
 function openSubjects(){
   cur=null;closeForm();
-  $id("pday").hidden=true;$id("psubs").hidden=false;
+  $id("pday").hidden=true;$id("psubs").hidden=false;$id("psync").hidden=true;
   $id("pwk").textContent="Academic year 2026/27";
   $id("ptitle").textContent="Subjects";
   renderSubs();
@@ -826,6 +930,7 @@ function openSubjects(){
 function renderSubs(){
   var h='<div class="shead"><span></span><span>Code</span><span>Name</span><span>Sem</span><span></span></div>';
   store.subjects.forEach(function(s,i){
+    if(s.del)return;
     var sm=String(+s.sem||0);
     h+='<div class="srow" data-i="'+i+'"><button type="button" class="swb" style="--c:'+PAL[(+s.c||0)%PAL.length]+'" data-a="col" aria-label="Change colour"></button>'+
        '<input data-f="code" maxlength="6" value="'+esc(s.code)+'" aria-label="Code">'+
@@ -839,25 +944,25 @@ var stimer;
 $id("slist").addEventListener("input",function(e){
   var f=e.target.getAttribute("data-f");if(!f)return;
   var s=store.subjects[+e.target.closest(".srow").getAttribute("data-i")];if(!s)return;
-  s[f]=f==="sem"?+e.target.value:(f==="code"?e.target.value.trim():e.target.value);
+  s[f]=f==="sem"?+e.target.value:(f==="code"?e.target.value.trim():e.target.value);s.u=Date.now();
   clearTimeout(stimer);stimer=setTimeout(function(){save();render()},250);
 });
 $id("slist").addEventListener("click",function(e){
   var b=e.target.closest("button[data-a]");if(!b)return;
   var i=+b.closest(".srow").getAttribute("data-i"),s=store.subjects[i];if(!s)return;
-  if(b.getAttribute("data-a")==="col"){s.c=((+s.c||0)+1)%PAL.length;b.style.setProperty("--c",PAL[s.c])}
+  if(b.getAttribute("data-a")==="col"){s.c=((+s.c||0)+1)%PAL.length;s.u=Date.now();b.style.setProperty("--c",PAL[s.c])}
   else{
-    var used=store.items.concat(store.classes).filter(function(o){return o.sub===s.id}).length;
+    var used=live(store.items.concat(store.classes)).filter(function(o){return o.sub===s.id}).length;
     if(!confirm(used?used+" schedule item(s) use "+s.code+". Remove the subject anyway? Those items stay but lose their label.":"Remove "+s.code+"?"))return;
-    store.subjects.splice(i,1);renderSubs();
+    s.del=true;s.u=Date.now();renderSubs();
   }
   save();render();
 });
 $id("sadd").onclick=function(){
-  var used=store.subjects.map(function(s){return +s.c||0}),c=0;
+  var used=live(store.subjects).map(function(s){return +s.c||0}),c=0;
   for(var k=0;k<PAL.length;k++)if(used.indexOf(k)<0){c=k;break}
   var sm=semOf(today);
-  store.subjects.push({id:uid(),code:"NEW",name:"",sem:sm?sm.n:0,c:c});
+  store.subjects.push({id:uid(),code:"NEW",name:"",sem:sm?sm.n:0,c:c,u:Date.now()});
   save();renderSubs();render();
   var ins=$id("slist").querySelectorAll('input[data-f="code"]');ins[ins.length-1].select();
 };
@@ -927,27 +1032,27 @@ $id("file").onchange=function(){
     try{j=JSON.parse(fr.result)}catch(err){alert("Could not read that JSON file.");return}
     if(!j||typeof j!=="object"){alert("No valid data found in that file.");return}
     var hasNew=Array.isArray(j.items)||Array.isArray(j.classes)||Array.isArray(j.subjects);
-    var inc=j.notes||(hasNew?{}:j),ok={};
-    Object.keys(inc).forEach(function(k){
-      var v=inc[k];
-      if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&v&&typeof v.text==="string"&&v.text)ok[k]={text:v.text.replace(/\r\n?/g,"\n"),updated:+v.updated||null};
-    });
-    function str(x){return typeof x==="string"}
-    var its=(Array.isArray(j.items)?j.items:[]).filter(function(o){return o&&str(o.id)&&str(o.sub)&&/^\d{4}-\d{2}-\d{2}$/.test(o.date)});
-    var cls=(Array.isArray(j.classes)?j.classes:[]).filter(function(o){return o&&str(o.id)&&str(o.sub)&&o.dow>=0&&o.dow<=6&&(o.sem===1||o.sem===2)&&o.w1>0&&o.w2>0});
-    var subs=(Array.isArray(j.subjects)?j.subjects:[]).filter(function(o){return o&&str(o.id)&&str(o.code)});
-    var nn=Object.keys(ok).length;
-    if(!nn&&!its.length&&!cls.length&&!subs.length){alert("No valid data found in that file.");return}
-    var rep=confirm("Found "+nn+" note(s), "+its.length+" schedule item(s), "+cls.length+" weekly class(es), "+subs.length+" subject(s).\n\nOK = replace what this file contains\nCancel = merge instead");
+    var inc=sanitize({notes:j.notes||(hasNew?{}:j),items:j.items,classes:j.classes,subjects:j.subjects});
+    var nn=Object.keys(inc.notes).filter(function(k){return !inc.notes[k].del}).length,
+        ni=live(inc.items).length,nc=live(inc.classes).length,ns=live(inc.subjects).length;
+    if(!nn&&!ni&&!nc&&!ns){alert("No valid data found in that file.");return}
+    var rep=confirm("Found "+nn+" note(s), "+ni+" schedule item(s), "+nc+" weekly class(es), "+ns+" subject(s).\n\nOK = replace what this file contains\nCancel = merge instead");
     if(!rep&&!confirm("Merge this data into the current calendar?"))return;
-    function merge(a,b){b.forEach(function(o){var ex=find(a,o.id);if(ex)Object.assign(ex,o);else a.push(o)})}
+    var now=Date.now();
     if(rep){
-      store.notes=ok;
-      if(Array.isArray(j.items))store.items=its;
-      if(Array.isArray(j.classes))store.classes=cls;
-      if(subs.length)store.subjects=subs;
+      /* the file wins: stamp it as newest and tombstone what it does not contain */
+      function replaceList(cur,incl){
+        var ids={};incl.forEach(function(o){o.u=now;ids[o.id]=1});
+        cur.forEach(function(o){if(!ids[o.id]&&!o.del){o.del=true;o.u=now}});
+        return mergeList(cur,incl);
+      }
+      Object.keys(store.notes).forEach(function(k){if(!inc.notes[k]&&store.notes[k].text)store.notes[k]={text:"",updated:now,del:true}});
+      Object.keys(inc.notes).forEach(function(k){inc.notes[k].updated=now;store.notes[k]=inc.notes[k]});
+      if(Array.isArray(j.items))store.items=replaceList(store.items,inc.items);
+      if(Array.isArray(j.classes))store.classes=replaceList(store.classes,inc.classes);
+      if(ns)store.subjects=replaceList(store.subjects,inc.subjects);
     } else {
-      Object.assign(store.notes,ok);merge(store.items,its);merge(store.classes,cls);merge(store.subjects,subs);
+      store=mergeStores(store,inc);
     }
     flush();render();
     if(cur)openDay(cur);
@@ -955,9 +1060,147 @@ $id("file").onchange=function(){
   fr.readAsText(f);
 };
 window.addEventListener("beforeunload",flush);
+
+/* ---- bridge for the sync module ---- */
+function openSync(){
+  cur=null;closeForm();
+  $id("pday").hidden=true;$id("psubs").hidden=true;$id("psync").hidden=false;
+  $id("pwk").textContent="Phone and laptop";
+  $id("ptitle").textContent="Sync";
+  document.body.classList.add("open");
+}
+$id("syncbtn").onclick=openSync;
+window.APUCAL={
+  onSave:null,
+  get:function(){return store},
+  canon:function(x){return x?canon(sanitize(x)):canon(store)},
+  /* merge a remote copy in; returns true when the local data changed */
+  absorb:function(remote){
+    var m=mergeStores(store,sanitize(remote));
+    if(canon(m)===canon(store))return false;
+    store=m;
+    try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}
+    render();
+    if(document.body.classList.contains("open")){
+      if(cur){
+        renderMy();upd();
+        var r=store.notes[cur],ta=$id("note");
+        if(document.activeElement!==ta)ta.value=r?r.text:"";
+      } else if(!$id("psubs").hidden&&!$id("slist").contains(document.activeElement))renderSubs();
+    }
+    return true;
+  }
+};
 render();
 if("serviceWorker" in navigator&&location.protocol!=="file:")window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});
 })();
+</script>
+<script type="module">
+/* Cloud sync: Firebase Auth + Firestore, one document per user at users/{uid}.
+   The calendar keeps working from localStorage; this only merges copies between devices. */
+import {initializeApp} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+import {getAuth,onAuthStateChanged,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,signOut} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,onSnapshot,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
+const app=initializeApp({
+  apiKey:"AIzaSyBpL563Pgnd0euEBOmrCz3d7z7HUL-SC2Y",
+  authDomain:"apu-calendar-f8e38.firebaseapp.com",
+  projectId:"apu-calendar-f8e38",
+  storageBucket:"apu-calendar-f8e38.firebasestorage.app",
+  messagingSenderId:"744523674406",
+  appId:"1:744523674406:web:e8b428d7c6dcf2550707e7"
+});
+const auth=getAuth(app);
+let db;
+try{db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})})}
+catch(e){db=initializeFirestore(app,{})}
+
+const A=window.APUCAL, $=id=>document.getElementById(id);
+let unsub=null, ref=null, remoteCanon=null, gotServer=false, pushT=null, lastSync=null, pending=false;
+const standalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+if(standalone&&/iP(hone|ad|od)/.test(navigator.userAgent))$("sios").hidden=false;
+
+function msg(t,kind){const m=$("smsg");m.textContent=t||"";m.className="msg"+(kind?" "+kind:"")}
+function status(){
+  const b=$("syncbtn"),t=$("synctxt"),u=auth.currentUser;
+  b.classList.remove("on","busy","off");
+  let label="Sync",detail="";
+  if(!u){label="Sync off";detail="Not signed in. Data is only on this device."}
+  else if(!navigator.onLine){label="Offline";b.classList.add("off");detail="Offline. Changes are saved on this device and will sync when you are back online."}
+  else if(pending||!gotServer){label="Syncing";b.classList.add("busy");detail="Syncing…"}
+  else{label="Synced";b.classList.add("on");detail="Up to date"+(lastSync?" · last synced "+lastSync.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}):"")+"."}
+  t.textContent=label;b.title=detail;
+  if(u){$("sstat").textContent=detail}
+}
+function push(){
+  clearTimeout(pushT);
+  pushT=setTimeout(()=>{
+    if(!ref||!gotServer)return;
+    const cur=A.canon();
+    if(cur===remoteCanon)return;
+    pending=true;status();
+    setDoc(ref,{json:JSON.stringify(A.get()),updatedAt:serverTimestamp(),agent:navigator.userAgent.slice(0,120)})
+      .catch(e=>{msg("Could not save to the cloud: "+(e.code||e.message)+". Your data is still saved on this device.","err")});
+  },600);
+}
+A.onSave=()=>{if(auth.currentUser)push()};
+
+onAuthStateChanged(auth,user=>{
+  if(unsub){unsub();unsub=null}
+  ref=null;remoteCanon=null;gotServer=false;pending=false;
+  $("sync-out").hidden=!!user;$("sync-in").hidden=!user;
+  if(user){
+    $("semailtxt").textContent=user.email||user.displayName||"your account";
+    ref=doc(db,"users",user.uid);
+    unsub=onSnapshot(ref,{includeMetadataChanges:true},snap=>{
+      const fromServer=!snap.metadata.fromCache;
+      if(fromServer)gotServer=true;
+      pending=snap.metadata.hasPendingWrites;
+      if(snap.exists()){
+        let remote=null;
+        try{remote=JSON.parse(snap.data().json)}catch(e){}
+        if(remote){
+          A.absorb(remote);
+          remoteCanon=A.canon(remote);
+        }
+        if(fromServer&&!pending)lastSync=new Date();
+      }
+      /* first sign-in on a fresh account: upload what is on this device */
+      if(gotServer)push();
+      status();
+    },err=>{msg("Sync stopped: "+(err.code||err.message),"err");status()});
+  }
+  status();
+});
+window.addEventListener("online",()=>{status();push()});
+window.addEventListener("offline",status);
+
+const errText=e=>({
+  "auth/operation-not-allowed":"This sign-in method is not switched on in Firebase yet.",
+  "auth/configuration-not-found":"Firebase Authentication is not set up yet (Authentication → Get started).",
+  "auth/popup-blocked":"The browser blocked the sign-in window. Allow pop-ups, or use email below.",
+  "auth/popup-closed-by-user":"The sign-in window was closed before finishing.",
+  "auth/cancelled-popup-request":"",
+  "auth/unauthorized-domain":"This website address is not in Firebase's Authorized domains list.",
+  "auth/invalid-credential":"Wrong email or password.",
+  "auth/invalid-login-credentials":"Wrong email or password.",
+  "auth/wrong-password":"Wrong email or password.",
+  "auth/user-not-found":"No account with that email. Use Create account first.",
+  "auth/email-already-in-use":"That email already has an account. Use Sign in.",
+  "auth/weak-password":"Password needs at least 6 characters.",
+  "auth/invalid-email":"That email address does not look right.",
+  "auth/network-request-failed":"No connection. Try again when you are online.",
+  "auth/too-many-requests":"Too many attempts. Wait a moment and try again."
+}[e&&e.code]??("Sign-in failed: "+(e&&(e.code||e.message))));
+
+$("sg").onclick=async()=>{msg("Opening Google sign-in…");try{await signInWithPopup(auth,new GoogleAuthProvider());msg("Signed in. Syncing…","ok")}catch(e){msg(errText(e),"err")}};
+$("sform").addEventListener("submit",async e=>{e.preventDefault();msg("Signing in…");try{await signInWithEmailAndPassword(auth,$("semail").value.trim(),$("spass").value);msg("Signed in. Syncing…","ok")}catch(er){msg(errText(er),"err")}});
+$("screate").onclick=async()=>{const f=$("sform");if(!f.reportValidity())return;msg("Creating account…");try{await createUserWithEmailAndPassword(auth,$("semail").value.trim(),$("spass").value);msg("Account created. Syncing…","ok")}catch(er){msg(errText(er),"err")}};
+$("sreset").onclick=async()=>{const em=$("semail").value.trim();if(!em){msg("Type your email first, then press Forgot password.","err");return}try{await sendPasswordResetEmail(auth,em);msg("Password reset email sent to "+em+".","ok")}catch(er){msg(errText(er),"err")}};
+$("sout").onclick=async()=>{await signOut(auth);msg("Signed out. Your data stays on this device.")};
+$("snow").onclick=()=>{msg("");push();status()};
+status();
+window.APUSYNC={auth,db};
 </script>
 </body>
 </html>
