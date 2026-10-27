@@ -99,6 +99,8 @@ h1{margin:0;display:flex;align-items:flex-start;gap:16px}
 .ch.one{border-left:3px solid var(--c);padding-left:4px}
 .ch.one span{color:var(--ink)}
 .ch.more{color:var(--faint);font-size:9px;letter-spacing:.06em}
+.ch em{flex:none;font-style:normal;font-size:9px;color:var(--faint);letter-spacing:.04em}
+.ch.ns b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.02em}
 .day.out .sched{opacity:.45}
 .skey{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:14px 0 0;font-size:10px;letter-spacing:.04em}
 .skey .kicker{margin-right:2px}
@@ -163,6 +165,7 @@ body.open #panel{transform:none}
 #pday{display:flex;flex-direction:column;gap:24px}
 #pform[hidden],#pday[hidden],#psubs[hidden],.lnk[hidden]{display:none}
 #pform:not(.wk) .wkonly{display:none}
+#pform.wk .oneonly{display:none}
 .fld{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .fld input,.fld select,.srow input,.srow select{width:100%;min-width:0;font:13px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink);background:transparent;border:1px solid var(--rule-strong);border-radius:0;padding:7px 8px}
 .fld input:focus,.fld select:focus,.srow input:focus,.srow select:focus{border-color:var(--ink);outline:none}
@@ -227,7 +230,7 @@ body.open #panel{transform:none}
   .day.hasnote{padding-bottom:9px}
   .sched{margin-top:4px;gap:1px}
   .ch{font-size:8px;gap:3px;letter-spacing:0}
-  .ch span{display:none}
+  .ch span,.ch em{display:none}
   .ch i{width:5px;height:5px}
   .ch.one{border-left-width:2px;padding-left:3px}
   .ch.more{font-size:8px;letter-spacing:0}
@@ -333,9 +336,10 @@ body.open #panel{transform:none}
   <div class="psec"><h4>Schedule</h4><div id="pev"></div></div>
   <div class="psec"><h4><span>My schedule</span><button type="button" class="lnk" id="addbtn">+ Add</button></h4><div id="pmy"></div>
     <form id="pform" hidden autocomplete="off">
-      <div class="seg" role="radiogroup" aria-label="Type"><label><input type="radio" name="kind" value="one" checked>One-off</label><label><input type="radio" name="kind" value="wk">Weekly class</label></div>
-      <label class="fld">Subject<select id="fsub"></select></label>
+      <div class="seg" role="radiogroup" aria-label="Type"><label><input type="radio" name="kind" value="one" checked>Event</label><label><input type="radio" name="kind" value="wk">Weekly class</label></div>
+      <label class="fld"><span id="fsublbl">Subject</span><select id="fsub"></select></label>
       <label class="fld">Title<input id="ftitle" maxlength="120"></label>
+      <div class="two oneonly"><label class="fld">From<input type="date" id="fd1" min="2026-08-01" max="2027-09-30"></label><label class="fld">To<input type="date" id="fd2" min="2026-08-01" max="2027-09-30"></label></div>
       <div class="two"><label class="fld">Start<input type="time" id="fst"></label><label class="fld">End<input type="time" id="fen"></label></div>
       <label class="fld">Place<input id="fplace" maxlength="80" placeholder="Optional"></label>
       <div class="two wkonly"><label class="fld">From week<select id="fw1"></select></label><label class="fld">To week<select id="fw2"></select></label></div>
@@ -500,7 +504,11 @@ function sanitize(j){
   });
   function clean(o,keys){var r={};keys.forEach(function(k){if(o[k]!==undefined&&o[k]!==null)r[k]=o[k]});r.u=+o.u||0;if(o.del)r.del=true;return r}
   (Array.isArray(j.items)?j.items:[]).forEach(function(o){
-    if(o&&isStr(o.id)&&isStr(o.sub)&&/^\d{4}-\d{2}-\d{2}$/.test(o.date))out.items.push(clean(o,["id","sub","title","date","st","en","place"]));
+    if(o&&isStr(o.id)&&isStr(o.sub)&&/^\d{4}-\d{2}-\d{2}$/.test(o.date)){
+      var it=clean(o,["id","sub","title","date","st","en","place"]);
+      if(/^\d{4}-\d{2}-\d{2}$/.test(o.end)&&o.end>o.date)it.end=o.end;
+      out.items.push(it);
+    }
   });
   (Array.isArray(j.classes)?j.classes:[]).forEach(function(o){
     if(o&&isStr(o.id)&&isStr(o.sub)&&o.dow>=0&&o.dow<=6&&(o.sem===1||o.sem===2)&&o.w1>0&&o.w2>0){
@@ -619,8 +627,10 @@ function monthTerms(){
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function find(list,id){for(var i=0;i<list.length;i++)if(list[i].id===id)return list[i];return null}
 function subOf(id){var s=find(store.subjects,id);return s&&!s.del?s:null}
-function subCode(id){var s=subOf(id);return s&&s.code?s.code:"—"}
-function subCol(id){var s=subOf(id);return s?PAL[(+s.c||0)%PAL.length]:"#9B9485"}
+function subCode(id){if(!id)return "";var s=subOf(id);return s&&s.code?s.code:"—"}
+function subCol(id){if(!id)return "#191814";var s=subOf(id);return s?PAL[(+s.c||0)%PAL.length]:"#9B9485"}
+function itemEnd(it){return it.end&&it.end>it.date?it.end:it.date}
+function itemDays(it){return dn(itemEnd(it))-dn(it.date)+1}
 function teachWeeks(sn){return WK.filter(function(w){return w&&w.type==="tch"&&w.sem&&w.sem.n===sn})}
 function timeTxt(o){return o.st?o.st+(o.en?"–"+o.en:""):""}
 /* 0 = not on this day, 1 = on, 2 = skipped this week */
@@ -632,16 +642,19 @@ function classOn(c,n){
 }
 function dayEntries(n,withSkipped){
   var id=iso(n),out=[];
-  store.items.forEach(function(it){if(it.date===id&&!it.del)out.push({k:"one",o:it})});
+  store.items.forEach(function(it){if(!it.del&&it.date<=id&&id<=itemEnd(it))out.push({k:"one",o:it,day:n-dn(it.date)+1,days:itemDays(it)})});
   store.classes.forEach(function(c){if(c.del)return;var r=classOn(c,n);if(r===1||(r===2&&withSkipped))out.push({k:"wk",o:c,skipped:r===2})});
-  out.sort(function(a,b){return (a.o.st||"").localeCompare(b.o.st||"")||(a.k===b.k?0:a.k==="one"?-1:1)});
+  /* multi-day events first (they read as a band across the week), then by time */
+  out.sort(function(a,b){return ((b.days||1)>1)-((a.days||1)>1)||(a.o.date||"").localeCompare(b.o.date||"")||(a.o.st||"").localeCompare(b.o.st||"")||(a.k===b.k?0:a.k==="one"?-1:1)});
   return out;
 }
 function chipsHTML(n){
   var es=dayEntries(n),max=4,show=es.length>max?max-1:es.length,h="";
   es.slice(0,show).forEach(function(e){
     var o=e.o,c=subCol(o.sub),code=esc(subCode(o.sub));
-    if(e.k==="one")h+='<span class="ch one" style="--c:'+c+'"><b>'+code+'</b><span>'+esc(o.title||timeTxt(o))+'</span></span>';
+    var part=e.days>1?'<em>'+e.day+'/'+e.days+'</em>':'';
+    if(e.k==="one"&&!o.sub)h+='<span class="ch one ns" style="--c:'+c+'"><b>'+esc(o.title||"Event")+'</b>'+part+'</span>';
+    else if(e.k==="one")h+='<span class="ch one" style="--c:'+c+'"><b>'+code+'</b><span>'+esc(o.title||timeTxt(o))+'</span>'+part+'</span>';
     else h+='<span class="ch" style="--c:'+c+'"><i></i><b>'+code+'</b><span>'+esc(o.st||o.title||"")+'</span></span>';
   });
   if(es.length>show)h+='<span class="ch more">+'+(es.length-show)+' more</span>';
@@ -824,9 +837,10 @@ function renderMy(){
   var es=dayEntries(dn(cur),true),h="";
   es.forEach(function(e){
     var o=e.o,s=subOf(o.sub),id=esc(o.id);
-    var meta=[e.k==="wk"?"Weekly · "+DOW[o.dow]+"s · S"+o.sem+" W"+o.w1+"–W"+o.w2:"One-off",timeTxt(o),o.place].filter(Boolean).join(" · ");
+    var meta=[e.k==="wk"?"Weekly · "+DOW[o.dow]+"s · S"+o.sem+" W"+o.w1+"–W"+o.w2
+      :(e.days>1?"Day "+e.day+" of "+e.days+" · "+span(dn(o.date),dn(itemEnd(o))):"Event"),timeTxt(o),o.place].filter(Boolean).join(" · ");
     h+='<div class="my'+(e.skipped?" skipped":"")+'" style="--c:'+subCol(o.sub)+'"><span class="bar"></span><div>'+
-       '<div class="t"><b>'+esc(subCode(o.sub))+'</b>'+esc(o.title||(s?s.name:""))+'</div><div class="d">'+esc(meta)+(e.skipped?" · skipped this week":"")+'</div><div class="acts">';
+       '<div class="t">'+(o.sub?'<b>'+esc(subCode(o.sub))+'</b>':'')+esc(o.title||(s?s.name:"Event"))+'</div><div class="d">'+esc(meta)+(e.skipped?" · skipped this week":"")+'</div><div class="acts">';
     if(e.skipped)h+='<button type="button" class="mini" data-a="unskip" data-id="'+id+'">Undo skip</button>';
     else{
       h+='<button type="button" class="mini" data-a="edit" data-k="'+e.k+'" data-id="'+id+'">Edit</button>';
@@ -847,8 +861,8 @@ function fillSubs(sel,sem){
     var ss=live(store.subjects).filter(function(s){return (+s.sem||0)===g[0]});
     if(ss.length)h+='<optgroup label="'+g[1]+'">'+ss.map(function(s){return '<option value="'+esc(s.id)+'">'+esc(s.code+" · "+s.name)+'</option>'}).join("")+'</optgroup>';
   });
-  $id("fsub").innerHTML=h;
-  if(sel&&subOf(sel))$id("fsub").value=sel;
+  $id("fsub").innerHTML='<option value="">No subject</option>'+h;
+  $id("fsub").value=sel&&subOf(sel)?sel:(sel===""?"":$id("fsub").options[1]?$id("fsub").options[1].value:"");
 }
 function fillWeeks(sn,w1,w2){
   var o=teachWeeks(sn).map(function(w){return '<option value="'+w.twn+'">W'+w.twn+' · '+short(w.s)+'</option>'}).join("");
@@ -858,12 +872,22 @@ function fillWeeks(sn,w1,w2){
 function hint(){
   $id("fhint").textContent=kind()==="wk"
     ?"Every "+DOW[fctx.dow]+", Semester "+fctx.sem+" weeks "+$id("fw1").value+"–"+$id("fw2").value+". Holiday, buffer and exam weeks are skipped automatically."
-    :"On "+DOW[dt(dn(cur)).getUTCDay()]+", "+full(dn(cur))+".";
+    :evHint();
+}
+function evHint(){
+  var a=$id("fd1").value,b=$id("fd2").value;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(a))return "";
+  if(!b||b<=a)return "On "+DOW[dt(dn(a)).getUTCDay()]+", "+full(dn(a))+".";
+  var n=dn(b)-dn(a)+1;
+  return n+" days: "+DOW[dt(dn(a)).getUTCDay()].slice(0,3)+" "+short(dn(a))+" – "+DOW[dt(dn(b)).getUTCDay()].slice(0,3)+" "+full(dn(b))+". Shows on every day.";
 }
 function syncKind(){
   var wk=kind()==="wk";
+  $id("fsublbl").textContent=wk?"Subject":"Subject (optional)";
+  var noSub=$id("fsub").querySelector('option[value=""]');if(noSub)noSub.disabled=wk;
+  if(wk&&!$id("fsub").value&&$id("fsub").options[1])$id("fsub").value=$id("fsub").options[1].value;
   $id("pform").classList.toggle("wk",wk);
-  $id("ftitle").placeholder=wk?"e.g. Lecture, Lab, Tutorial":"e.g. Assignment 1 due, Quiz";
+  $id("ftitle").placeholder=wk?"e.g. Lecture, Lab, Tutorial":"e.g. Assignment 1 due, Hackathon, Trip";
   hint();
 }
 function openForm(k,o){
@@ -872,8 +896,10 @@ function openForm(k,o){
   fctx={dow:o&&k==="wk"?o.dow:dt(n).getUTCDay(),sem:o&&k==="wk"?o.sem:(sm?sm.n:0)};
   document.querySelectorAll('input[name="kind"]').forEach(function(r){r.checked=r.value===k;r.disabled=!!o||(r.value==="wk"&&!fctx.sem)});
   var cs=semOf(n);
-  fillSubs(o?o.sub:null,cs?cs.n:fctx.sem);
+  fillSubs(o?o.sub:"",cs?cs.n:fctx.sem);
   $id("ftitle").value=o?o.title||"":"";
+  $id("fd1").value=o&&k==="one"?o.date:cur;
+  $id("fd2").value=o&&k==="one"?itemEnd(o):cur;
   $id("fst").value=o?o.st||"":"";$id("fen").value=o?o.en||"":"";$id("fplace").value=o?o.place||"":"";
   if(fctx.sem){
     var tw=teachWeeks(fctx.sem),last=tw[tw.length-1].twn,start=null;
@@ -891,16 +917,25 @@ $id("addbtn").onclick=function(){openForm("one",null)};
 $id("fcancel").onclick=closeForm;
 document.querySelectorAll('input[name="kind"]').forEach(function(r){r.addEventListener("change",syncKind)});
 $id("fw1").onchange=$id("fw2").onchange=hint;
+$id("fd1").addEventListener("change",function(){if($id("fd2").value<this.value)$id("fd2").value=this.value;hint()});
+$id("fd2").addEventListener("change",hint);
 $id("pform").addEventListener("submit",function(e){
   e.preventDefault();
   var k=kind(),o={sub:$id("fsub").value,title:$id("ftitle").value.trim(),st:$id("fst").value,en:$id("fen").value,place:$id("fplace").value.trim()};
-  if(!o.sub){alert("Pick a subject first.");return}
+  if(k==="wk"&&!o.sub){alert("Pick a subject for a weekly class.");return}
+  if(k==="one"&&!o.sub&&!o.title){alert("Give the event a title, or pick a subject.");return}
   if(o.st&&o.en&&o.en<o.st){alert("The end time is before the start time.");return}
   if(k==="wk"){
     o.w1=+$id("fw1").value;o.w2=+$id("fw2").value;
     if(o.w2<o.w1){var t=o.w1;o.w1=o.w2;o.w2=t}
     o.dow=fctx.dow;o.sem=fctx.sem;
-  } else if(!editing)o.date=cur;
+  } else {
+    var d1=$id("fd1").value,d2=$id("fd2").value||d1;
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(d1)){alert("Pick a start date.");return}
+    if(d2<d1){alert("The end date is before the start date.");return}
+    if(dn(d2)-dn(d1)>365){alert("An event can be at most a year long.");return}
+    o.date=d1;o.end=d2>d1?d2:undefined;
+  }
   var list=k==="wk"?store.classes:store.items;
   o.u=Date.now();
   if(editing){var ex=find(list,editing.id);if(ex)Object.assign(ex,o)}
@@ -1073,7 +1108,7 @@ $id("syncbtn").onclick=openSync;
 window.APUCAL={
   onSave:null,
   get:function(){return store},
-  canon:function(x){return x?canon(sanitize(x)):canon(store)},
+  canon:function(x){return canon(sanitize(x||store))},   /* normalise both sides so shape drift never looks like a change */
   /* merge a remote copy in; returns true when the local data changed */
   absorb:function(remote){
     var m=mergeStores(store,sanitize(remote));
@@ -1163,7 +1198,7 @@ onAuthStateChanged(auth,user=>{
           A.absorb(remote);
           remoteCanon=A.canon(remote);
         }
-        if(fromServer&&!pending)lastSync=new Date();
+        if(fromServer&&!pending){lastSync=new Date();if($("smsg").classList.contains("ok"))msg("")}
       }
       /* first sign-in on a fresh account: upload what is on this device */
       if(gotServer)push();
