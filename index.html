@@ -90,6 +90,25 @@ h1{margin:0;display:flex;align-items:flex-start;gap:16px}
 .mn .mnd small{display:block;font-size:9px;font-weight:400;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:3px}
 .mn .mnt{font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
 .mnempty{padding:12px 0;font-size:12px;color:var(--faint)}
+.day.hasnote{padding-bottom:12px}
+.sched{display:flex;flex-direction:column;gap:2px;width:100%;margin-top:6px;min-width:0}
+.ch{display:flex;align-items:baseline;gap:5px;width:100%;min-width:0;font-size:10px;line-height:1.3;letter-spacing:.02em;color:var(--ink)}
+.ch i{flex:none;width:6px;height:6px;align-self:center;background:var(--c);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.ch b{flex:none;font-weight:600;letter-spacing:.05em}
+.ch span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.ch.one{border-left:3px solid var(--c);padding-left:4px}
+.ch.one span{color:var(--ink)}
+.ch.more{color:var(--faint);font-size:9px;letter-spacing:.06em}
+.day.out .sched{opacity:.45}
+.skey{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:14px 0 0;font-size:10px;letter-spacing:.04em}
+.skey .kicker{margin-right:2px}
+.skey .k{display:inline-flex;align-items:center;gap:5px}
+.skey .k i{width:6px;height:6px;background:var(--c);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.skey .k b{font-weight:600;letter-spacing:.05em}
+.skey .k span{color:var(--muted)}
+.skey .lnk{margin-left:auto}
+.lnk{border:0;background:none;padding:0 0 2px;cursor:pointer;font:inherit;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);border-bottom:1px solid var(--ink)}
+.lnk:hover{color:var(--ori);border-color:var(--ori)}
 .notetext{white-space:pre-wrap;word-break:break-word}
 .foot{display:flex;align-items:center;gap:22px;margin-top:auto;padding-top:12px;border-top:1px solid var(--rule-strong);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .legend{display:flex;gap:14px;flex-wrap:wrap}
@@ -127,6 +146,42 @@ body.open #panel{transform:none}
 .ev .d{font-size:10px;color:var(--faint);margin-top:3px;letter-spacing:.04em}
 .ev .tag{font-size:9px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
 .ev .tag.ori{color:var(--ori)}.ev .tag.hol{color:var(--hol)}.ev .tag.exam{color:var(--exam)}.ev .tag.buf{color:var(--buf)}.ev .tag.tch{color:var(--ori)}
+.psec h4{display:flex;justify-content:space-between;align-items:baseline}
+.my{display:grid;grid-template-columns:4px minmax(0,1fr);gap:10px;padding:9px 0;border-bottom:1px solid var(--rule)}
+.my .bar{background:var(--c)}
+.my .t{font-size:13px;word-break:break-word}
+.my .t b{font-weight:600;letter-spacing:.05em;margin-right:7px}
+.my .d{font-size:10px;color:var(--faint);margin-top:3px;letter-spacing:.04em}
+.my .acts{display:flex;gap:14px;margin-top:7px;flex-wrap:wrap}
+.my.skipped .t{color:var(--faint);text-decoration:line-through}
+.my.skipped .bar{opacity:.35}
+.empty{padding:9px 0;font-size:12px;color:var(--faint);border-bottom:1px solid var(--rule)}
+.mini{border:0;background:none;padding:0;cursor:pointer;font:inherit;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.mini:hover{color:var(--ink)}
+.mini.del:hover{color:var(--exam)}
+#pform{display:flex;flex-direction:column;gap:11px;margin-top:12px;padding-top:14px;border-top:1px solid var(--ink)}
+#pday{display:flex;flex-direction:column;gap:24px}
+#pform[hidden],#pday[hidden],#psubs[hidden],.lnk[hidden]{display:none}
+#pform:not(.wk) .wkonly{display:none}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.fld input,.fld select,.srow input,.srow select{width:100%;min-width:0;font:13px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink);background:transparent;border:1px solid var(--rule-strong);border-radius:0;padding:7px 8px}
+.fld input:focus,.fld select:focus,.srow input:focus,.srow select:focus{border-color:var(--ink);outline:none}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:flex;border:1px solid var(--ink)}
+.seg label{flex:1;position:relative;text-align:center;padding:8px 0;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){background:var(--ink);color:var(--paper-2)}
+.seg label:has(input:disabled:not(:checked)){opacity:.35;cursor:default}
+.hint{margin:0;font-size:11px;line-height:1.5;color:var(--muted)}
+.facts{display:flex;align-items:center;gap:18px}
+.pri{border:1px solid var(--ink);background:var(--ink);color:var(--paper-2);padding:9px 18px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.pri:hover{background:#000}
+.shead,.srow{display:grid;grid-template-columns:22px 66px minmax(0,1fr) 56px 18px;gap:8px;align-items:center}
+.shead{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding-bottom:6px;border-bottom:1px solid var(--rule)}
+.srow{padding:6px 0;border-bottom:1px solid var(--rule)}
+.srow input,.srow select{font-size:12px;padding:6px}
+.swb{width:22px;height:22px;border:0;padding:0;background:var(--c);cursor:pointer}
+#sadd{align-self:flex-start;margin-top:14px}
 #note{width:100%;min-height:130px;resize:vertical;background:transparent;border:1px solid var(--rule-strong);padding:10px 11px;font:13px/1.55 var(--sans);color:var(--ink);outline-offset:2px}
 #note:focus{border-color:var(--ink)}
 #pupd{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:8px}
@@ -150,6 +205,15 @@ body.open #panel{transform:none}
   .num{font-size:12px}
   .day-note{font-size:9px;padding-top:3px}
   .day.hasnote:after{height:5px}
+  .day.hasnote{padding-bottom:9px}
+  .sched{margin-top:4px;gap:1px}
+  .ch{font-size:8px;gap:3px;letter-spacing:0}
+  .ch span{display:none}
+  .ch i{width:5px;height:5px}
+  .ch.one{border-left-width:2px;padding-left:3px}
+  .ch.more{font-size:8px;letter-spacing:0}
+  .skey{gap:6px 14px}
+  .shead,.srow{grid-template-columns:22px 58px minmax(0,1fr) 52px 18px;gap:6px}
   #panel{top:auto;left:0;right:0;bottom:0;width:auto;max-height:86vh;border-left:0;border-top:1px solid var(--rule-strong);border-radius:14px 14px 0 0;transform:translateY(101%);padding:24px 20px 20px}
   body.open #panel{transform:none}
   .foot{flex-wrap:wrap;gap:12px}
@@ -159,7 +223,7 @@ body.open #panel{transform:none}
   @page{size:A4 landscape;margin:9mm}
   html,body{background:#fff}
   .sheet{max-width:none;min-height:188mm;padding:0;display:flex;flex-direction:column}
-  .sheet:before,.nav,.foot .io,#panel,#ov,.mnotes{display:none}
+  .sheet:before,.nav,.foot .io,#panel,#ov,.mnotes,.skey .lnk{display:none}
   .masthead{padding-bottom:8px}
   .monogram{width:26px;height:26px;font-size:9px}
   .kicker{font-size:8px}
@@ -184,6 +248,11 @@ body.open #panel{transform:none}
   .day-note{font-size:7.5px;padding-top:3px}
   .week.off{background:#F2EEE4}
   .day.hasnote:after{height:4px}
+  .day.hasnote{padding-bottom:7px}
+  .sched{margin-top:3px;gap:1px}
+  .ch{font-size:7px}
+  .ch.one{border-left-width:2px;padding-left:3px}
+  .skey{padding-top:6px;font-size:7.5px}
   .day:hover{background:none}
   .foot{margin-top:auto;padding-top:7px;font-size:7.5px}
   .legend{gap:10px}
@@ -229,7 +298,7 @@ body.open #panel{transform:none}
       <span><i class="sw buf"></i>Buffer</span>
     </div>
     <span class="spacer"></span>
-    <div class="io"><button id="exp">Export notes</button><button id="ics">Export .ics</button><button id="imp">Import</button></div>
+    <div class="io"><button id="exp">Export data</button><button id="ics">Export .ics</button><button id="imp">Import</button></div>
     <span class="pageno" id="pageno"></span>
   </footer>
 </main>
@@ -239,8 +308,27 @@ body.open #panel{transform:none}
     <div><div class="pwk" id="pwk"></div><h2 id="ptitle"></h2></div>
     <button class="close" id="pclose" aria-label="Close">&times;</button>
   </header>
+  <div id="pday">
   <div class="psec"><h4>Schedule</h4><div id="pev"></div></div>
+  <div class="psec"><h4><span>My schedule</span><button type="button" class="lnk" id="addbtn">+ Add</button></h4><div id="pmy"></div>
+    <form id="pform" hidden autocomplete="off">
+      <div class="seg" role="radiogroup" aria-label="Type"><label><input type="radio" name="kind" value="one" checked>One-off</label><label><input type="radio" name="kind" value="wk">Weekly class</label></div>
+      <label class="fld">Subject<select id="fsub"></select></label>
+      <label class="fld">Title<input id="ftitle" maxlength="120"></label>
+      <div class="two"><label class="fld">Start<input type="time" id="fst"></label><label class="fld">End<input type="time" id="fen"></label></div>
+      <label class="fld">Place<input id="fplace" maxlength="80" placeholder="Optional"></label>
+      <div class="two wkonly"><label class="fld">From week<select id="fw1"></select></label><label class="fld">To week<select id="fw2"></select></label></div>
+      <p class="hint" id="fhint"></p>
+      <div class="facts"><button type="submit" class="pri" id="fsave">Add</button><button type="button" class="mini" id="fcancel">Cancel</button></div>
+    </form>
+  </div>
   <div class="psec"><h4>Note</h4><textarea id="note" placeholder="Write something for this day"></textarea><div id="pupd"></div></div>
+  </div>
+  <div id="psubs" hidden>
+    <p class="hint">Codes appear in the calendar cells. Changes save automatically. Click a colour square to change it.</p>
+    <div id="slist" style="margin-top:14px"></div>
+    <button type="button" class="lnk" id="sadd">+ Add subject</button>
+  </div>
 </aside>
 <input type="file" id="file" accept="application/json,.json" hidden>
 
@@ -327,8 +415,34 @@ function ymOf(n){var d=dt(n);return d.getUTCFullYear()*12+d.getUTCMonth()}
 var ym=clampYM(qs.get("m")?(function(a){return +a[0]*12+ +a[1]-1})(qs.get("m").split("-")):ymOf(today));
 var view=qs.get("v")==="list"?"list":"month";
 var KEY="apu-cal-2026-27";
-var store={notes:{}};
-try{var raw=JSON.parse(localStorage.getItem(KEY));if(raw&&raw.notes){store=raw;Object.keys(store.notes).forEach(function(k){var v=store.notes[k];if(v&&typeof v.text==="string")v.text=v.text.replace(/\r\n?/g,"\n")})}}catch(e){}
+/* subject colours: muted inks that sit on the paper */
+var PAL=["#3F5B73","#4C6654","#8A6A2F","#6B4E71","#2F6B6B","#A0522D","#5A5F2A","#9A5C6E"];
+var DEF_SUB=[
+  {id:"pm",code:"PM",name:"Project Management",sem:1,c:0},
+  {id:"ux",code:"UX",name:"User Experience",sem:1,c:1},
+  {id:"inv",code:"INV",name:"Investigations",sem:1,c:2},
+  {id:"alg",code:"ALG",name:"Algorithms",sem:1,c:3},
+  {id:"vb",code:"VB",name:"Venture Building",sem:1,c:4},
+  {id:"ipcv",code:"IPCV",name:"Image Processing, Computer Vision and Pattern Recognition",sem:1,c:5},
+  {id:"tasa",code:"TASA",name:"Text Analytics and Sentiment Analysis",sem:1,c:6},
+  {id:"prj",code:"PRJ",name:"Project Module",sem:2,c:0},
+  {id:"ads",code:"ADS",name:"Advanced Database Systems",sem:2,c:1},
+  {id:"fai",code:"FAI",name:"Further Artificial Intelligence",sem:2,c:2},
+  {id:"odl",code:"ODL",name:"Optimisation and Deep Learning",sem:2,c:3},
+  {id:"oth",code:"OTH",name:"Other / personal",sem:0,c:7}
+];
+var store={notes:{},subjects:null,items:[],classes:[]};
+try{
+  var raw=JSON.parse(localStorage.getItem(KEY));
+  if(raw&&typeof raw==="object"){
+    if(raw.notes&&typeof raw.notes==="object")store.notes=raw.notes;
+    if(Array.isArray(raw.subjects))store.subjects=raw.subjects;
+    if(Array.isArray(raw.items))store.items=raw.items;
+    if(Array.isArray(raw.classes))store.classes=raw.classes;
+  }
+  Object.keys(store.notes).forEach(function(k){var v=store.notes[k];if(v&&typeof v.text==="string")v.text=v.text.replace(/\r\n?/g,"\n")});
+}catch(e){}
+if(!store.subjects)store.subjects=JSON.parse(JSON.stringify(DEF_SUB));
 var timer;
 function flush(){clearTimeout(timer);try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}}
 
@@ -399,6 +513,46 @@ function monthTerms(){
   return items.slice(0,4);
 }
 
+/* ---- my schedule ---- */
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function find(list,id){for(var i=0;i<list.length;i++)if(list[i].id===id)return list[i];return null}
+function subOf(id){return find(store.subjects,id)}
+function subCode(id){var s=subOf(id);return s&&s.code?s.code:"—"}
+function subCol(id){var s=subOf(id);return s?PAL[(+s.c||0)%PAL.length]:"#9B9485"}
+function teachWeeks(sn){return WK.filter(function(w){return w&&w.type==="tch"&&w.sem&&w.sem.n===sn})}
+function timeTxt(o){return o.st?o.st+(o.en?"–"+o.en:""):""}
+/* 0 = not on this day, 1 = on, 2 = skipped this week */
+function classOn(c,n){
+  var w=weekOf(n);
+  if(!w||w.type!=="tch"||!w.sem||w.sem.n!==c.sem)return 0;
+  if(dt(n).getUTCDay()!==c.dow||w.twn<c.w1||w.twn>c.w2)return 0;
+  return (c.skip||[]).indexOf(iso(n))>=0?2:1;
+}
+function dayEntries(n,withSkipped){
+  var id=iso(n),out=[];
+  store.items.forEach(function(it){if(it.date===id)out.push({k:"one",o:it})});
+  store.classes.forEach(function(c){var r=classOn(c,n);if(r===1||(r===2&&withSkipped))out.push({k:"wk",o:c,skipped:r===2})});
+  out.sort(function(a,b){return (a.o.st||"").localeCompare(b.o.st||"")||(a.k===b.k?0:a.k==="one"?-1:1)});
+  return out;
+}
+function chipsHTML(n){
+  var es=dayEntries(n),max=4,show=es.length>max?max-1:es.length,h="";
+  es.slice(0,show).forEach(function(e){
+    var o=e.o,c=subCol(o.sub),code=esc(subCode(o.sub));
+    if(e.k==="one")h+='<span class="ch one" style="--c:'+c+'"><b>'+code+'</b><span>'+esc(o.title||timeTxt(o))+'</span></span>';
+    else h+='<span class="ch" style="--c:'+c+'"><i></i><b>'+code+'</b><span>'+esc(o.st||o.title||"")+'</span></span>';
+  });
+  if(es.length>show)h+='<span class="ch more">+'+(es.length-show)+' more</span>';
+  return h?'<span class="sched">'+h+'</span>':"";
+}
+function subjectKey(sems){
+  var any=Object.keys(sems).length;
+  var ks=store.subjects.filter(function(s){return !any||sems[+s.sem]||!+s.sem});
+  return '<section class="skey" aria-label="Subjects"><span class="kicker">Subjects</span>'+
+    ks.map(function(s){return '<span class="k" style="--c:'+PAL[(+s.c||0)%PAL.length]+'"><i></i><b>'+esc(s.code)+'</b><span>'+esc(s.name)+'</span></span>'}).join("")+
+    '<button type="button" class="lnk" id="msub">Manage subjects</button></section>';
+}
+
 /* ---- month view ---- */
 function renderMonth(){
   var y=Math.floor(ym/12), m=ym%12;
@@ -417,8 +571,10 @@ function renderMonth(){
   h+='</div></section>';
   h+='<section class="calendar" aria-label="'+MONTHS[m]+' '+y+'"><div class="dow"><div class="wk-head">Week</div>'+
     ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(function(d){return "<div>"+d+"</div>"}).join("")+'</div>';
+  var sems={};
   for(var r=0;r<rows;r++){
     var ws=start+7*r, w=weekOf(ws);
+    if(w&&w.sem&&w.type==="tch")sems[w.sem.n]=1;
     var cls="week"+(w&&(w.type==="hol"||w.type==="exam")?" off":"");
     h+='<div class="'+cls+'">';
     var preTxt=ws<W0?"Pre-term":"After term";
@@ -441,13 +597,14 @@ function renderMonth(){
       });
       if(!note&&w&&w.type==="pre"&&c===0){note="";}
       h+='<button class="'+cn+'" data-d="'+id+'"'+(memo?' title="'+esc(memo)+'"':'')+' aria-label="'+DOW[dd.getUTCDay()]+', '+full(d)+(w?", week "+w.n+" "+wlabel(w):"")+(memo?", note: "+memo.replace(/\s+/g," "):"")+'">'+
-         '<span class="num">'+dd.getUTCDate()+'</span>'+
+         '<span class="num">'+dd.getUTCDate()+'</span>'+chipsHTML(d)+
          (note?'<span class="day-note '+ntype+'">'+esc(note)+'</span>':'')+
          '</button>';
     }
     h+='</div>';
   }
   h+='</section>';
+  h+=subjectKey(sems);
   h+='<section class="mnotes" id="mnotes" aria-label="Notes this month">'+monthNotesHTML()+'</section>';
   $id("main").innerHTML=h;
 }
@@ -528,6 +685,8 @@ function openDay(id){
   var r=store.notes[id];
   $id("note").value=r?r.text:"";
   upd();
+  $id("pday").hidden=false;$id("psubs").hidden=true;
+  closeForm();renderMy();
   document.body.classList.add("open");
   setTimeout(function(){$id("note").focus()},60);
 }
@@ -537,8 +696,9 @@ function upd(){
 }
 function closeP(){
   document.body.classList.remove("open");
-  var c=cur;cur=null;
-  if(c){var b=document.querySelector('.day[data-d="'+c+'"]');if(b)b.focus()}
+  var c=cur,subs=!$id("psubs").hidden;cur=null;closeForm();
+  if(subs){var m=$id("msub");if(m)m.focus()}
+  else if(c){var b=document.querySelector('.day[data-d="'+c+'"]');if(b)b.focus()}
 }
 var composing=false;
 $id("note").addEventListener("compositionstart",function(){composing=true});
@@ -554,6 +714,153 @@ $id("note").addEventListener("input",function(){
   refreshMonthNotes();
   clearTimeout(timer);timer=setTimeout(flush,300);
 });
+
+/* ---- my schedule: panel list + form ---- */
+function save(){flush()}
+function renderMy(){
+  var es=dayEntries(dn(cur),true),h="";
+  es.forEach(function(e){
+    var o=e.o,s=subOf(o.sub),id=esc(o.id);
+    var meta=[e.k==="wk"?"Weekly · "+DOW[o.dow]+"s · S"+o.sem+" W"+o.w1+"–W"+o.w2:"One-off",timeTxt(o),o.place].filter(Boolean).join(" · ");
+    h+='<div class="my'+(e.skipped?" skipped":"")+'" style="--c:'+subCol(o.sub)+'"><span class="bar"></span><div>'+
+       '<div class="t"><b>'+esc(subCode(o.sub))+'</b>'+esc(o.title||(s?s.name:""))+'</div><div class="d">'+esc(meta)+(e.skipped?" · skipped this week":"")+'</div><div class="acts">';
+    if(e.skipped)h+='<button type="button" class="mini" data-a="unskip" data-id="'+id+'">Undo skip</button>';
+    else{
+      h+='<button type="button" class="mini" data-a="edit" data-k="'+e.k+'" data-id="'+id+'">Edit</button>';
+      if(e.k==="wk")h+='<button type="button" class="mini" data-a="skip" data-id="'+id+'">Skip this week</button><button type="button" class="mini del" data-a="delwk" data-id="'+id+'">Delete series</button>';
+      else h+='<button type="button" class="mini del" data-a="del" data-id="'+id+'">Delete</button>';
+    }
+    h+='</div></div></div>';
+  });
+  $id("pmy").innerHTML=h||'<div class="empty">Nothing added for this day</div>';
+}
+var editing=null,fctx={dow:0,sem:0};
+function formSem(n){var s=semOf(n);if(s)return s;for(var i=0;i<SEM.length;i++)if(SEM[i].s>n)return SEM[i];return null}
+function kind(){var r=document.querySelector('input[name="kind"]:checked');return r?r.value:"one"}
+function fillSubs(sel,sem){
+  var groups=[[1,"Semester 1"],[2,"Semester 2"],[0,"Other"]],h="";
+  groups.sort(function(a,b){return (b[0]===sem)-(a[0]===sem)});
+  groups.forEach(function(g){
+    var ss=store.subjects.filter(function(s){return (+s.sem||0)===g[0]});
+    if(ss.length)h+='<optgroup label="'+g[1]+'">'+ss.map(function(s){return '<option value="'+esc(s.id)+'">'+esc(s.code+" · "+s.name)+'</option>'}).join("")+'</optgroup>';
+  });
+  $id("fsub").innerHTML=h;
+  if(sel&&subOf(sel))$id("fsub").value=sel;
+}
+function fillWeeks(sn,w1,w2){
+  var o=teachWeeks(sn).map(function(w){return '<option value="'+w.twn+'">W'+w.twn+' · '+short(w.s)+'</option>'}).join("");
+  $id("fw1").innerHTML=o;$id("fw2").innerHTML=o;
+  $id("fw1").value=String(w1);$id("fw2").value=String(w2);
+}
+function hint(){
+  $id("fhint").textContent=kind()==="wk"
+    ?"Every "+DOW[fctx.dow]+", Semester "+fctx.sem+" weeks "+$id("fw1").value+"–"+$id("fw2").value+". Holiday, buffer and exam weeks are skipped automatically."
+    :"On "+DOW[dt(dn(cur)).getUTCDay()]+", "+full(dn(cur))+".";
+}
+function syncKind(){
+  var wk=kind()==="wk";
+  $id("pform").classList.toggle("wk",wk);
+  $id("ftitle").placeholder=wk?"e.g. Lecture, Lab, Tutorial":"e.g. Assignment 1 due, Quiz";
+  hint();
+}
+function openForm(k,o){
+  var n=dn(cur),sm=formSem(n);
+  editing=o?{k:k,id:o.id}:null;
+  fctx={dow:o&&k==="wk"?o.dow:dt(n).getUTCDay(),sem:o&&k==="wk"?o.sem:(sm?sm.n:0)};
+  document.querySelectorAll('input[name="kind"]').forEach(function(r){r.checked=r.value===k;r.disabled=!!o||(r.value==="wk"&&!fctx.sem)});
+  var cs=semOf(n);
+  fillSubs(o?o.sub:null,cs?cs.n:fctx.sem);
+  $id("ftitle").value=o?o.title||"":"";
+  $id("fst").value=o?o.st||"":"";$id("fen").value=o?o.en||"":"";$id("fplace").value=o?o.place||"":"";
+  if(fctx.sem){
+    var tw=teachWeeks(fctx.sem),last=tw[tw.length-1].twn,start=null;
+    for(var i=0;i<tw.length;i++)if(tw[i].e>=n){start=tw[i].twn;break}
+    if(start===null)start=last;
+    fillWeeks(fctx.sem,o&&k==="wk"?o.w1:start,o&&k==="wk"?o.w2:last);
+  }
+  $id("fsave").textContent=o?"Save changes":"Add";
+  $id("pform").hidden=false;$id("addbtn").hidden=true;
+  syncKind();
+  $id("fsub").focus();
+}
+function closeForm(){$id("pform").hidden=true;$id("addbtn").hidden=false;editing=null}
+$id("addbtn").onclick=function(){openForm("one",null)};
+$id("fcancel").onclick=closeForm;
+document.querySelectorAll('input[name="kind"]').forEach(function(r){r.addEventListener("change",syncKind)});
+$id("fw1").onchange=$id("fw2").onchange=hint;
+$id("pform").addEventListener("submit",function(e){
+  e.preventDefault();
+  var k=kind(),o={sub:$id("fsub").value,title:$id("ftitle").value.trim(),st:$id("fst").value,en:$id("fen").value,place:$id("fplace").value.trim()};
+  if(!o.sub){alert("Pick a subject first.");return}
+  if(o.st&&o.en&&o.en<o.st){alert("The end time is before the start time.");return}
+  if(k==="wk"){
+    o.w1=+$id("fw1").value;o.w2=+$id("fw2").value;
+    if(o.w2<o.w1){var t=o.w1;o.w1=o.w2;o.w2=t}
+    o.dow=fctx.dow;o.sem=fctx.sem;
+  } else if(!editing)o.date=cur;
+  var list=k==="wk"?store.classes:store.items;
+  if(editing){var ex=find(list,editing.id);if(ex)Object.assign(ex,o)}
+  else{o.id=uid();if(k==="wk")o.skip=[];list.push(o)}
+  save();closeForm();renderMy();render();
+});
+$id("pmy").addEventListener("click",function(e){
+  var b=e.target.closest("button[data-a]");if(!b)return;
+  var a=b.getAttribute("data-a"),id=b.getAttribute("data-id"),c;
+  if(a==="edit"){var k=b.getAttribute("data-k");openForm(k,find(k==="wk"?store.classes:store.items,id));return}
+  if(a==="del"){if(!confirm("Delete this item?"))return;store.items=store.items.filter(function(x){return x.id!==id})}
+  if(a==="delwk"){if(!confirm("Delete this weekly class from every week?"))return;store.classes=store.classes.filter(function(x){return x.id!==id})}
+  if(a==="skip"){c=find(store.classes,id);if(c){c.skip=c.skip||[];c.skip.push(cur)}}
+  if(a==="unskip"){c=find(store.classes,id);if(c)c.skip=(c.skip||[]).filter(function(d){return d!==cur})}
+  save();renderMy();render();
+});
+
+/* ---- subjects editor ---- */
+function openSubjects(){
+  cur=null;closeForm();
+  $id("pday").hidden=true;$id("psubs").hidden=false;
+  $id("pwk").textContent="Academic year 2026/27";
+  $id("ptitle").textContent="Subjects";
+  renderSubs();
+  document.body.classList.add("open");
+}
+function renderSubs(){
+  var h='<div class="shead"><span></span><span>Code</span><span>Name</span><span>Sem</span><span></span></div>';
+  store.subjects.forEach(function(s,i){
+    var sm=String(+s.sem||0);
+    h+='<div class="srow" data-i="'+i+'"><button type="button" class="swb" style="--c:'+PAL[(+s.c||0)%PAL.length]+'" data-a="col" aria-label="Change colour"></button>'+
+       '<input data-f="code" maxlength="6" value="'+esc(s.code)+'" aria-label="Code">'+
+       '<input data-f="name" maxlength="90" value="'+esc(s.name)+'" aria-label="Name">'+
+       '<select data-f="sem" aria-label="Semester">'+[["1","S1"],["2","S2"],["0","—"]].map(function(o){return '<option value="'+o[0]+'"'+(o[0]===sm?" selected":"")+'>'+o[1]+'</option>'}).join("")+'</select>'+
+       '<button type="button" class="mini del" data-a="rm" aria-label="Remove '+esc(s.code)+'">&times;</button></div>';
+  });
+  $id("slist").innerHTML=h;
+}
+var stimer;
+$id("slist").addEventListener("input",function(e){
+  var f=e.target.getAttribute("data-f");if(!f)return;
+  var s=store.subjects[+e.target.closest(".srow").getAttribute("data-i")];if(!s)return;
+  s[f]=f==="sem"?+e.target.value:(f==="code"?e.target.value.trim():e.target.value);
+  clearTimeout(stimer);stimer=setTimeout(function(){save();render()},250);
+});
+$id("slist").addEventListener("click",function(e){
+  var b=e.target.closest("button[data-a]");if(!b)return;
+  var i=+b.closest(".srow").getAttribute("data-i"),s=store.subjects[i];if(!s)return;
+  if(b.getAttribute("data-a")==="col"){s.c=((+s.c||0)+1)%PAL.length;b.style.setProperty("--c",PAL[s.c])}
+  else{
+    var used=store.items.concat(store.classes).filter(function(o){return o.sub===s.id}).length;
+    if(!confirm(used?used+" schedule item(s) use "+s.code+". Remove the subject anyway? Those items stay but lose their label.":"Remove "+s.code+"?"))return;
+    store.subjects.splice(i,1);renderSubs();
+  }
+  save();render();
+});
+$id("sadd").onclick=function(){
+  var used=store.subjects.map(function(s){return +s.c||0}),c=0;
+  for(var k=0;k<PAL.length;k++)if(used.indexOf(k)<0){c=k;break}
+  var sm=semOf(today);
+  store.subjects.push({id:uid(),code:"NEW",name:"",sem:sm?sm.n:0,c:c});
+  save();renderSubs();render();
+  var ins=$id("slist").querySelectorAll('input[data-f="code"]');ins[ins.length-1].select();
+};
 $id("pclose").onclick=closeP;
 $id("ov").onclick=closeP;
 document.addEventListener("keydown",function(e){
@@ -569,6 +876,7 @@ $id("vl").onclick=function(){view="list";render()};
 $id("prt").onclick=function(){window.print()};
 
 $id("main").addEventListener("click",function(e){
+  if(e.target.closest("#msub")){openSubjects();return}
   var t=e.target.closest("[data-d]");
   if(t)openDay(t.getAttribute("data-d"));
 });
@@ -577,8 +885,8 @@ $id("main").addEventListener("click",function(e){
 $id("exp").onclick=function(){
   flush();
   var a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([JSON.stringify({key:KEY,exported:new Date().toISOString(),notes:store.notes},null,2)],{type:"application/json"}));
-  a.download="apu-calendar-notes-"+iso(today)+".json";
+  a.href=URL.createObjectURL(new Blob([JSON.stringify({key:KEY,exported:new Date().toISOString(),notes:store.notes,subjects:store.subjects,items:store.items,classes:store.classes},null,2)],{type:"application/json"}));
+  a.download="apu-calendar-data-"+iso(today)+".json";
   document.body.appendChild(a);a.click();a.remove();
 };
 $id("imp").onclick=function(){$id("file").click()};
@@ -615,18 +923,32 @@ $id("file").onchange=function(){
   var f=this.files[0];this.value="";if(!f)return;
   var fr=new FileReader();
   fr.onload=function(){
-    var inc;
-    try{var j=JSON.parse(fr.result);inc=j.notes||j}catch(err){alert("Could not read that JSON file.");return}
-    var ok={};
+    var j;
+    try{j=JSON.parse(fr.result)}catch(err){alert("Could not read that JSON file.");return}
+    if(!j||typeof j!=="object"){alert("No valid data found in that file.");return}
+    var hasNew=Array.isArray(j.items)||Array.isArray(j.classes)||Array.isArray(j.subjects);
+    var inc=j.notes||(hasNew?{}:j),ok={};
     Object.keys(inc).forEach(function(k){
       var v=inc[k];
       if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&v&&typeof v.text==="string"&&v.text)ok[k]={text:v.text.replace(/\r\n?/g,"\n"),updated:+v.updated||null};
     });
-    var n=Object.keys(ok).length;
-    if(!n){alert("No valid notes found in that file.");return}
-    var rep=confirm("Found "+n+" note(s).\n\nOK = replace all current notes\nCancel = merge instead");
-    if(!rep&&!confirm("Merge these notes into the current ones?"))return;
-    store.notes=rep?ok:Object.assign(store.notes,ok);
+    function str(x){return typeof x==="string"}
+    var its=(Array.isArray(j.items)?j.items:[]).filter(function(o){return o&&str(o.id)&&str(o.sub)&&/^\d{4}-\d{2}-\d{2}$/.test(o.date)});
+    var cls=(Array.isArray(j.classes)?j.classes:[]).filter(function(o){return o&&str(o.id)&&str(o.sub)&&o.dow>=0&&o.dow<=6&&(o.sem===1||o.sem===2)&&o.w1>0&&o.w2>0});
+    var subs=(Array.isArray(j.subjects)?j.subjects:[]).filter(function(o){return o&&str(o.id)&&str(o.code)});
+    var nn=Object.keys(ok).length;
+    if(!nn&&!its.length&&!cls.length&&!subs.length){alert("No valid data found in that file.");return}
+    var rep=confirm("Found "+nn+" note(s), "+its.length+" schedule item(s), "+cls.length+" weekly class(es), "+subs.length+" subject(s).\n\nOK = replace what this file contains\nCancel = merge instead");
+    if(!rep&&!confirm("Merge this data into the current calendar?"))return;
+    function merge(a,b){b.forEach(function(o){var ex=find(a,o.id);if(ex)Object.assign(ex,o);else a.push(o)})}
+    if(rep){
+      store.notes=ok;
+      if(Array.isArray(j.items))store.items=its;
+      if(Array.isArray(j.classes))store.classes=cls;
+      if(subs.length)store.subjects=subs;
+    } else {
+      Object.assign(store.notes,ok);merge(store.items,its);merge(store.classes,cls);merge(store.subjects,subs);
+    }
     flush();render();
     if(cur)openDay(cur);
   };
