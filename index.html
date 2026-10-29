@@ -37,6 +37,11 @@ button{font:inherit;color:inherit}
 .nav .on{color:var(--ink);border-bottom:1px solid var(--ink);padding-bottom:2px}
 .nav .arrow{font-size:14px;line-height:1}
 .nav .sep{width:1px;height:13px;background:var(--rule-strong)}
+.nav .board-link{display:contents}
+.nav .board-link a{color:inherit;text-decoration:none}
+.nav .board-link a:hover{color:var(--ink)}
+/* the board link only makes sense in a desktop browser; home-screen apps keep separate storage */
+@media (display-mode:standalone) and (hover:none){.nav .board-link{display:none}}
 .month-head{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(340px,.7fr);gap:56px;align-items:end;padding:38px 0 30px}
 .mtitle .kicker{margin-bottom:16px}
 h1{margin:0;display:flex;align-items:flex-start;gap:16px}
@@ -232,6 +237,7 @@ body.open #panel{transform:none}
   .sheet{padding:30px 26px 22px}
 }
 @media screen and (max-width:760px){
+  .nav .board-link{display:none}
   .sheet{padding:calc(24px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))}
   .sheet:before{width:4px}
   .masthead{flex-direction:column;gap:16px}
@@ -332,6 +338,7 @@ body.open #panel{transform:none}
       <button id="prt">Print</button>
       <span class="sep"></span>
       <button id="syncbtn" title="Sync between devices"><i></i><span id="synctxt">Sync</span></button>
+      <span class="board-link"><span class="sep"></span><a href="https://desktop-u3a0u27.tailcf179a.ts.net/board/">Board</a></span>
     </nav>
   </header>
   <section id="tview" hidden>
