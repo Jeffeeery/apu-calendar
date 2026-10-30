@@ -162,6 +162,7 @@ body.open #panel{transform:none}
 .my .t{font-size:13px;word-break:break-word}
 .my .t b{font-weight:600;letter-spacing:.05em;margin-right:7px}
 .my .d{font-size:10px;color:var(--faint);margin-top:3px;letter-spacing:.04em}
+.my .rtag{display:inline-block;margin-left:8px;padding:1px 5px;border:1px solid var(--rule-strong);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);vertical-align:1px}
 .my .acts{display:flex;gap:14px;margin-top:7px;flex-wrap:wrap}
 .my.skipped .t{color:var(--faint);text-decoration:line-through}
 .my.skipped .bar{opacity:.35}
@@ -567,7 +568,7 @@ function sanitize(j){
   function clean(o,keys){var r={};keys.forEach(function(k){if(o[k]!==undefined&&o[k]!==null)r[k]=o[k]});r.u=+o.u||0;if(o.del)r.del=true;return r}
   (Array.isArray(j.items)?j.items:[]).forEach(function(o){
     if(o&&isStr(o.id)&&isStr(o.sub)&&/^\d{4}-\d{2}-\d{2}$/.test(o.date)){
-      var it=clean(o,["id","sub","title","date","st","en","place"]);
+      var it=clean(o,["id","sub","title","date","st","en","place","rec"]);
       if(/^\d{4}-\d{2}-\d{2}$/.test(o.end)&&o.end>o.date)it.end=o.end;
       out.items.push(it);
     }
@@ -1011,8 +1012,9 @@ function renderMy(){
     var o=e.o,s=subOf(o.sub),id=esc(o.id);
     var meta=[e.k==="wk"?"Weekly · "+DOW[o.dow]+"s · S"+o.sem+" W"+o.w1+"–W"+o.w2
       :(e.days>1?"Day "+e.day+" of "+e.days+" · "+span(dn(o.date),dn(itemEnd(o))):"Event"),timeTxt(o),o.place].filter(Boolean).join(" · ");
+    var tag=o.rec?'<span class="rtag">Record</span>':"";
     h+='<div class="my'+(e.skipped?" skipped":"")+'" style="--c:'+subCol(o.sub)+'"><span class="bar"></span><div>'+
-       '<div class="t">'+(o.sub?'<b>'+esc(subCode(o.sub))+'</b>':'')+esc(o.title||(s?s.name:"Event"))+'</div><div class="d">'+esc(meta)+(e.skipped?" · skipped this week":"")+'</div><div class="acts">';
+       '<div class="t">'+(o.sub?'<b>'+esc(subCode(o.sub))+'</b>':'')+esc(o.title||(s?s.name:"Event"))+tag+'</div><div class="d">'+esc(meta)+(e.skipped?" · skipped this week":"")+'</div><div class="acts">';
     if(e.skipped)h+='<button type="button" class="mini" data-a="unskip" data-id="'+id+'">Undo skip</button>';
     else{
       h+='<button type="button" class="mini" data-a="edit" data-k="'+e.k+'" data-id="'+id+'">Edit</button>';
