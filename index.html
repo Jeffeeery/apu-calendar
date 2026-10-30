@@ -177,11 +177,11 @@ body.open #panel{transform:none}
 #pform.wk .oneonly{display:none}
 #pform .chk{flex-direction:row;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:12px;color:var(--ink);margin-top:10px;cursor:pointer}
 #pform .chk input{width:auto;padding:0;accent-color:var(--ink)}
-/* The item form reveals by animating the wrapper's height (JS sets the px values; see revealForm). */
-.pfw{overflow:hidden;transition:height .5s cubic-bezier(.4,0,.2,1)}
+/* The item form reveals by animating the wrapper's height (see revealForm). */
+.pfw{overflow:hidden}
 #pform:not([hidden]){animation:pformIn .5s cubic-bezier(.4,0,.2,1)}
 @keyframes pformIn{from{opacity:0}to{opacity:1}}
-@media (prefers-reduced-motion:reduce){.pfw{transition:none}#pform:not([hidden]){animation:none}}
+@media (prefers-reduced-motion:reduce){#pform:not([hidden]){animation:none}}
 .fld{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .fld input,.fld select,.srow input,.srow select{width:100%;min-width:0;font:13px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink);background:transparent;border:1px solid var(--rule-strong);border-radius:0;padding:7px 8px}
 .fld input:focus,.fld select:focus,.srow input:focus,.srow select:focus{border-color:var(--ink);outline:none}
@@ -1094,24 +1094,27 @@ function openForm(k,o){
   syncKind();
   revealForm(true);
 }
-/* Animate the wrapper height so the form unfolds instead of snapping in. */
+/* Animate the wrapper height so the form unfolds instead of snapping in.
+   Web Animations API: a plain CSS height transition on a just-unhidden box is unreliable. */
 function revealForm(open){
-  var w=$id("pfw"),f=$id("pform"),live=!f.hidden,ms=520;
-  clearTimeout(revealForm.t);w.ontransitionend=null;
+  var w=$id("pfw"),f=$id("pform");
+  if(revealForm.a){revealForm.a.cancel();revealForm.a=null}
+  var soft=!window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if(open){
-    if(live){w.style.height="auto";return}
-    f.hidden=false;w.style.height="0px";
-    void w.offsetHeight;
-    w.style.height=f.scrollHeight+"px";
-    w.ontransitionend=function(){w.style.height="auto";w.ontransitionend=null};
-    revealForm.t=setTimeout(function(){w.style.height="auto"},ms);
+    if(!f.hidden){w.style.height="auto";return}
+    f.hidden=false;
+    var h=f.offsetHeight;
+    w.style.height=h+"px";
+    if(soft)revealForm.a=w.animate([{height:"0px"},{height:h+"px"}],{duration:500,easing:"cubic-bezier(.4,0,.2,1)"});
+    var done=function(){w.style.height="auto";revealForm.a=null};
+    if(revealForm.a)revealForm.a.onfinish=done;else done();
   } else {
-    if(!live)return;
-    w.style.height=f.scrollHeight+"px";
-    void w.offsetHeight;
-    w.style.height="0px";
-    var done=function(){if(w.style.height!=="0px")return;f.hidden=true;w.style.height=""};
-    w.ontransitionend=done;revealForm.t=setTimeout(done,ms);
+    if(f.hidden)return;
+    var h2=f.offsetHeight;
+    w.style.height=h2+"px";
+    if(soft)revealForm.a=w.animate([{height:h2+"px"},{height:"0px"}],{duration:500,easing:"cubic-bezier(.4,0,.2,1)",fill:"forwards"});
+    var done2=function(){f.hidden=true;w.style.height="";revealForm.a=null};
+    if(revealForm.a)revealForm.a.onfinish=done2;else done2();
   }
 }
 function closeForm(){revealForm(false);$id("addbtn").hidden=false;editing=null}
