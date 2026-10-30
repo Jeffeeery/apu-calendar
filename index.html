@@ -177,11 +177,10 @@ body.open #panel{transform:none}
 #pform.wk .oneonly{display:none}
 #pform .chk{flex-direction:row;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:12px;color:var(--ink);margin-top:10px;cursor:pointer}
 #pform .chk input{width:auto;padding:0;accent-color:var(--ink)}
-/* The item form reveals by animating the wrapper's height (see revealForm). */
-.pfw{overflow:hidden}
-#pform:not([hidden]){animation:pformIn .5s cubic-bezier(.4,0,.2,1)}
-@keyframes pformIn{from{opacity:0}to{opacity:1}}
-@media (prefers-reduced-motion:reduce){#pform:not([hidden]){animation:none}}
+/* The item form reveals by growing the wrapper's max-height (content is ~467px; 560px leaves headroom). */
+.pfw{overflow:hidden;max-height:0;opacity:0;transition:max-height .5s cubic-bezier(.4,0,.2,1),opacity .4s ease}
+.pfw.on{max-height:560px;opacity:1}
+@media (prefers-reduced-motion:reduce){.pfw{transition:none}}
 .fld{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .fld input,.fld select,.srow input,.srow select{width:100%;min-width:0;font:13px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink);background:transparent;border:1px solid var(--rule-strong);border-radius:0;padding:7px 8px}
 .fld input:focus,.fld select:focus,.srow input:focus,.srow select:focus{border-color:var(--ink);outline:none}
@@ -1068,7 +1067,6 @@ function syncKind(){
   var noSub=$id("fsub").querySelector('option[value=""]');if(noSub)noSub.disabled=wk;
   if(wk&&!$id("fsub").value&&$id("fsub").options[1])$id("fsub").value=$id("fsub").options[1].value;
   $id("pform").classList.toggle("wk",wk);
-  if(!$id("pform").hidden)$id("pfw").style.height="auto";  /* field set changes: let the wrapper follow the content */
   $id("ftitle").placeholder=wk?"e.g. Lecture, Lab, Tutorial":"e.g. Assignment 1 due, Hackathon, Trip";
   hint();
 }
@@ -1093,35 +1091,9 @@ function openForm(k,o){
   $id("fsave").textContent=o?"Save changes":"Add";
   $id("addbtn").hidden=true;
   syncKind();
-  revealForm(true);
+  $id("pfw").classList.add("on");
 }
-/* Animate the wrapper height so the form unfolds instead of snapping in.
-   Web Animations API: a plain CSS height transition on a just-unhidden box is unreliable. */
-function revealForm(open){
-  var w=$id("pfw"),f=$id("pform");
-  if(revealForm.a){revealForm.a.cancel();revealForm.a=null}
-  clearTimeout(revealForm.t);
-  var soft=!window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if(open){
-    if(!f.hidden){w.style.height="auto";return}
-    f.hidden=false;
-    var h=f.offsetHeight;
-    w.style.height=h+"px";
-    var done=function(){w.style.height="auto";revealForm.a=null};
-    if(soft)revealForm.a=w.animate([{height:"0px"},{height:h+"px"}],{duration:500,easing:"cubic-bezier(.4,0,.2,1)"});
-    if(revealForm.a)revealForm.a.onfinish=done;else done();
-    revealForm.t=setTimeout(done,560);  /* belt and braces: a paused tab must not leave a frozen height */
-  } else {
-    if(f.hidden)return;
-    var h2=f.offsetHeight;
-    w.style.height=h2+"px";
-    var done2=function(){f.hidden=true;w.style.height="";revealForm.a=null};
-    if(soft)revealForm.a=w.animate([{height:h2+"px"},{height:"0px"}],{duration:500,easing:"cubic-bezier(.4,0,.2,1)",fill:"forwards"});
-    if(revealForm.a)revealForm.a.onfinish=done2;else done2();
-    revealForm.t=setTimeout(done2,560);
-  }
-}
-function closeForm(){revealForm(false);$id("addbtn").hidden=false;editing=null}
+function closeForm(){$id("pfw").classList.remove("on");$id("pform").hidden=true;$id("addbtn").hidden=false;editing=null}
 $id("addbtn").onclick=function(){openForm("one",null)};
 $id("fcancel").onclick=closeForm;
 document.querySelectorAll('input[name="kind"]').forEach(function(r){r.addEventListener("change",syncKind)});
