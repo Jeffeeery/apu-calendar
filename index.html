@@ -1099,22 +1099,25 @@ function openForm(k,o){
 function revealForm(open){
   var w=$id("pfw"),f=$id("pform");
   if(revealForm.a){revealForm.a.cancel();revealForm.a=null}
+  clearTimeout(revealForm.t);
   var soft=!window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if(open){
     if(!f.hidden){w.style.height="auto";return}
     f.hidden=false;
     var h=f.offsetHeight;
     w.style.height=h+"px";
-    if(soft)revealForm.a=w.animate([{height:"0px"},{height:h+"px"}],{duration:500,easing:"cubic-bezier(.4,0,.2,1)"});
     var done=function(){w.style.height="auto";revealForm.a=null};
+    if(soft)revealForm.a=w.animate([{height:"0px"},{height:h+"px"}],{duration:500,easing:"cubic-bezier(.4,0,.2,1)"});
     if(revealForm.a)revealForm.a.onfinish=done;else done();
+    revealForm.t=setTimeout(done,560);  /* belt and braces: a paused tab must not leave a frozen height */
   } else {
     if(f.hidden)return;
     var h2=f.offsetHeight;
     w.style.height=h2+"px";
-    if(soft)revealForm.a=w.animate([{height:h2+"px"},{height:"0px"}],{duration:500,easing:"cubic-bezier(.4,0,.2,1)",fill:"forwards"});
     var done2=function(){f.hidden=true;w.style.height="";revealForm.a=null};
+    if(soft)revealForm.a=w.animate([{height:h2+"px"},{height:"0px"}],{duration:500,easing:"cubic-bezier(.4,0,.2,1)",fill:"forwards"});
     if(revealForm.a)revealForm.a.onfinish=done2;else done2();
+    revealForm.t=setTimeout(done2,560);
   }
 }
 function closeForm(){revealForm(false);$id("addbtn").hidden=false;editing=null}
