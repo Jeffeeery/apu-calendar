@@ -1091,6 +1091,7 @@ function openForm(k,o){
   $id("fsave").textContent=o?"Save changes":"Add";
   $id("addbtn").hidden=true;
   syncKind();
+  $id("pform").hidden=false;
   $id("pfw").classList.add("on");
 }
 function closeForm(){$id("pfw").classList.remove("on");$id("pform").hidden=true;$id("addbtn").hidden=false;editing=null}
