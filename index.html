@@ -177,9 +177,9 @@ body.open #panel{transform:none}
 #pform.wk .oneonly{display:none}
 #pform .chk{flex-direction:row;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:12px;color:var(--ink);margin-top:10px;cursor:pointer}
 #pform .chk input{width:auto;padding:0;accent-color:var(--ink)}
-/* The item form reveals by growing the wrapper's max-height (content is ~467px; 560px leaves headroom). */
-.pfw{overflow:hidden;max-height:0;opacity:0;transition:max-height .5s cubic-bezier(.4,0,.2,1),opacity .4s ease}
-.pfw.on{max-height:560px;opacity:1}
+/* The item form reveals by growing the wrapper's max-height (measured content: 467px, 520px leaves headroom). */
+.pfw{overflow:hidden;max-height:0;opacity:0;transition:max-height .7s cubic-bezier(.25,.1,.25,1),opacity .45s ease}
+.pfw.on{max-height:520px;opacity:1}
 @media (prefers-reduced-motion:reduce){.pfw{transition:none}}
 .fld{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .fld input,.fld select,.srow input,.srow select{width:100%;min-width:0;font:13px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink);background:transparent;border:1px solid var(--rule-strong);border-radius:0;padding:7px 8px}
