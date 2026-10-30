@@ -177,12 +177,10 @@ body.open #panel{transform:none}
 #pform.wk .oneonly{display:none}
 #pform .chk{flex-direction:row;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:12px;color:var(--ink);margin-top:10px;cursor:pointer}
 #pform .chk input{width:auto;padding:0;accent-color:var(--ink)}
-/* The item form reveals by growing its row from 0 to auto, so the rows above it slide instead of jumping. */
-.pfw{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s cubic-bezier(.4,0,.2,1)}
-.pfw.on{grid-template-rows:1fr}
-.pfw>form{overflow:hidden;min-height:0}
+/* The item form reveals by animating the wrapper's height (JS sets the px values; see revealForm). */
+.pfw{overflow:hidden;transition:height .5s cubic-bezier(.4,0,.2,1)}
 #pform:not([hidden]){animation:pformIn .5s cubic-bezier(.4,0,.2,1)}
-@keyframes pformIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes pformIn{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.pfw{transition:none}#pform:not([hidden]){animation:none}}
 .fld{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .fld input,.fld select,.srow input,.srow select{width:100%;min-width:0;font:13px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink);background:transparent;border:1px solid var(--rule-strong);border-radius:0;padding:7px 8px}
@@ -1092,11 +1090,31 @@ function openForm(k,o){
     fillWeeks(fctx.sem,o&&k==="wk"?o.w1:start,o&&k==="wk"?o.w2:last);
   }
   $id("fsave").textContent=o?"Save changes":"Add";
-  $id("pform").hidden=false;$id("addbtn").hidden=true;
+  $id("addbtn").hidden=true;
   syncKind();
-  $id("pfw").classList.add("on");
+  revealForm(true);
 }
-function closeForm(){$id("pfw").classList.remove("on");$id("pform").hidden=true;$id("addbtn").hidden=false;editing=null}
+/* Animate the wrapper height so the form unfolds instead of snapping in. */
+function revealForm(open){
+  var w=$id("pfw"),f=$id("pform"),live=!f.hidden,ms=520;
+  clearTimeout(revealForm.t);w.ontransitionend=null;
+  if(open){
+    if(live){w.style.height="auto";return}
+    f.hidden=false;w.style.height="0px";
+    void w.offsetHeight;
+    w.style.height=f.scrollHeight+"px";
+    w.ontransitionend=function(){w.style.height="auto";w.ontransitionend=null};
+    revealForm.t=setTimeout(function(){w.style.height="auto"},ms);
+  } else {
+    if(!live)return;
+    w.style.height=f.scrollHeight+"px";
+    void w.offsetHeight;
+    w.style.height="0px";
+    var done=function(){if(w.style.height!=="0px")return;f.hidden=true;w.style.height=""};
+    w.ontransitionend=done;revealForm.t=setTimeout(done,ms);
+  }
+}
+function closeForm(){revealForm(false);$id("addbtn").hidden=false;editing=null}
 $id("addbtn").onclick=function(){openForm("one",null)};
 $id("fcancel").onclick=closeForm;
 document.querySelectorAll('input[name="kind"]').forEach(function(r){r.addEventListener("change",syncKind)});

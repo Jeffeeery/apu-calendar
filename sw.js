@@ -1,5 +1,5 @@
 // Offline cache. Bump VERSION whenever index.html changes so phones pick up the update.
-const VERSION = "apu-cal-v15";
+const VERSION = "apu-cal-v16";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-32.png"];
 // Firebase SDK files are versioned URLs, so they never change: cache them on first use.
 const SDK = "https://www.gstatic.com/firebasejs/";
