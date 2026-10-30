@@ -174,6 +174,8 @@ body.open #panel{transform:none}
 #pform[hidden],#pday[hidden],#psubs[hidden],.lnk[hidden]{display:none}
 #pform:not(.wk) .wkonly{display:none}
 #pform.wk .oneonly{display:none}
+#pform .chk{flex-direction:row;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:12px;color:var(--ink);margin-top:10px;cursor:pointer}
+#pform .chk input{width:auto;padding:0;accent-color:var(--ink)}
 .fld{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .fld input,.fld select,.srow input,.srow select{width:100%;min-width:0;font:13px var(--sans);letter-spacing:0;text-transform:none;color:var(--ink);background:transparent;border:1px solid var(--rule-strong);border-radius:0;padding:7px 8px}
 .fld input:focus,.fld select:focus,.srow input:focus,.srow select:focus{border-color:var(--ink);outline:none}
@@ -393,6 +395,7 @@ body.open #panel{transform:none}
       <label class="fld"><span id="fsublbl">Subject</span><select id="fsub"></select></label>
       <label class="fld">Title<input id="ftitle" maxlength="120"></label>
       <div class="two oneonly"><label class="fld">From<input type="date" id="fd1" min="2026-08-01" max="2027-09-30"></label><label class="fld">To<input type="date" id="fd2" min="2026-08-01" max="2027-09-30"></label></div>
+      <label class="fld chk oneonly"><input type="checkbox" id="frec"><span>Just a record &mdash; not a task</span></label>
       <div class="two"><label class="fld">Start<input type="time" id="fst"></label><label class="fld">End<input type="time" id="fen"></label></div>
       <label class="fld">Place<input id="fplace" maxlength="80" placeholder="Optional"></label>
       <div class="two wkonly"><label class="fld">From week<select id="fw1"></select></label><label class="fld">To week<select id="fw2"></select></label></div>
@@ -1070,6 +1073,7 @@ function openForm(k,o){
   $id("fd1").value=o&&k==="one"?o.date:cur;
   $id("fd2").value=o&&k==="one"?itemEnd(o):cur;
   $id("fst").value=o?o.st||"":"";$id("fen").value=o?o.en||"":"";$id("fplace").value=o?o.place||"":"";
+  $id("frec").checked=!!(o&&k==="one"&&o.rec);
   if(fctx.sem){
     var tw=teachWeeks(fctx.sem),last=tw[tw.length-1].twn,start=null;
     for(var i=0;i<tw.length;i++)if(tw[i].e>=n){start=tw[i].twn;break}
@@ -1107,6 +1111,7 @@ $id("pform").addEventListener("submit",function(e){
   }
   var list=k==="wk"?store.classes:store.items;
   o.u=Date.now();
+  o.rec=k==="one"&&$id("frec").checked?true:undefined;
   if(editing){var ex=find(list,editing.id);if(ex)Object.assign(ex,o)}
   else{o.id=uid();if(k==="wk")o.skip=[];list.push(o)}
   save();closeForm();renderMy();render();
